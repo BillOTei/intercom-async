@@ -1,8 +1,9 @@
+package service
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl._
 import akka.util.ByteString
-
 import play.Logger
 
 import scala.util.{Failure, Success}
@@ -20,8 +21,10 @@ object Server {
       conn.handleWith(
         Flow[ByteString].fold(ByteString.empty)((acc, b) => acc ++ b).map(
           b => {
-            Logger.info("Event server received message: " + b.utf8String)
-            b.utf8String
+            val stringMsg = b.utf8String
+            Logger.info("Event server received message: " + stringMsg)
+
+            stringMsg
           }
         ).map(ByteString(_))
       )

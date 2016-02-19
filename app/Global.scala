@@ -1,5 +1,6 @@
 import akka.actor.ActorSystem
 import play.api.{GlobalSettings, Logger}
+import service.Server
 
 /**
  * Created by BillOTei on 17/02/16
