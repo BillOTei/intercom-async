@@ -4,10 +4,19 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl._
 import akka.util.ByteString
-import models.Message
+import akka.pattern.ask
+import akka.util.Timeout
+
+import models.{Response, Message}
+
 import play.Logger
 import play.api.libs.json.Json
 
+import service.actors.ForwardActor
+import service.actors.ForwardActor.Forward
+
+import scala.language.postfixOps
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 object Server {
@@ -15,6 +24,7 @@ object Server {
     implicit val sys = system
     import system.dispatcher
     implicit val materializer = ActorMaterializer()
+    val forwardActor = system.actorOf(ForwardActor.props)
 
     val handler = Sink.foreach[Tcp.IncomingConnection] { conn =>
       Logger.info("Event server connected to: " + conn.remoteAddress)
@@ -23,12 +33,19 @@ object Server {
       conn.handleWith(
         Flow[ByteString].fold(ByteString.empty)((acc, b) => acc ++ b).map(
           b => {
+            implicit val timeout = Timeout(5 seconds)
             val stringMsg = b.utf8String
             Logger.info("Event server received message: " + stringMsg)
-            Message.asOption(Json.toJson(stringMsg)) match {
+            // Forward the message to the appropriate actor
+            Message.asOption(Json.parse(stringMsg)) match {
               case Some(m) =>
+                (forwardActor ? Forward(m)).mapTo[Response].onComplete {
+                  case Success(response) => Logger.info(response.body)
+                  case Failure(err) =>
+                }
               case None => Logger.error(s"Message invalid $stringMsg")
             }
+            // Output the strmsg for bytestring conversion to respond to the publisher
             stringMsg
           }
         ).map(ByteString(_))
