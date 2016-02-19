@@ -4,7 +4,9 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl._
 import akka.util.ByteString
+import models.Message
 import play.Logger
+import play.api.libs.json.Json
 
 import scala.util.{Failure, Success}
 
@@ -23,7 +25,10 @@ object Server {
           b => {
             val stringMsg = b.utf8String
             Logger.info("Event server received message: " + stringMsg)
-
+            Message.asOption(Json.toJson(stringMsg)) match {
+              case Some(m) =>
+              case None => Logger.error(s"Message invalid $stringMsg")
+            }
             stringMsg
           }
         ).map(ByteString(_))

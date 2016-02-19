@@ -1,9 +1,11 @@
 package models
 
-import play.api.libs.json.JsObject
-import play.api.libs.json._
-import play.api.libs.json.Reads._
+import play.api.Play
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json._
+
+import scala.collection.JavaConversions._
 
 /**
  * Created by BillOTei on 17/02/16
@@ -16,11 +18,14 @@ object Message {
     (JsPath \ "payload").read[JsObject]
   )(Message.apply _)
 
-  def validate(msg: JsValue): Unit = {
+  def asOption(msg: JsValue): Option[Message] = {
     msg.validate[Message] match {
-      case s: JsSuccess[Message] =>
-
-      case e: JsError =>
+      case s: JsSuccess[Message] => s.value.service match {
+        case clientName if Play.current.configuration.getStringList("clients").getOrElse(java.util.Collections.emptyList()).
+          toList.contains(clientName) => Some(s.value)
+        case _ => None
+      }
+      case e: JsError => None
     }
   }
 }
