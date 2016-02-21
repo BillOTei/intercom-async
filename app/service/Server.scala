@@ -63,18 +63,19 @@ object Server {
     * @return
     */
   def handleIncomingMessages(system: ActorSystem, stringMsg: String): String = {
-    implicit val timeout = Timeout(5 seconds)
+    implicit val timeout = Timeout(10 seconds)
     Logger.info("Event server received message: " + stringMsg)
     // Forward the message to the appropriate actor, ask for the response
     Message.asOption(Json.parse(stringMsg)) match {
       case Some(m) =>
         (system.actorOf(ForwardActor.props) ? Forward(m)).mapTo[Response].onComplete {
           case Success(response) => Logger.info(response.body)
-          case Failure(err) =>
+          case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
         }
       case None => Logger.error(s"Message invalid $stringMsg")
     }
     // Output the strmsg for bytestring conversion to respond to the publisher
+    // same message sent back means transmission went ok on the publisher side
     stringMsg
   }
 }

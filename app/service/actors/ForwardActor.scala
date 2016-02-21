@@ -4,6 +4,8 @@ import akka.actor.{Props, Actor}
 
 import models.{Response, Message}
 
+import play.Logger
+
 object ForwardActor {
   def props = Props[ForwardActor]
 
@@ -15,6 +17,13 @@ class ForwardActor extends Actor {
 
   def receive = {
     case Forward(msg: Message) =>
-      sender ! Response(200, msg.payload.toString)
+      msg.service match {
+        case "intercom" =>
+          Logger.info("Forwarding message to intercom...")
+
+        case _ =>
+          Logger.warn(s"Service ${msg.service} not implemented yet")
+          sender ! Response(status = false, msg.payload.toString)
+      }
   }
 }

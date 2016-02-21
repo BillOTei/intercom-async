@@ -1,3 +1,3 @@
 package models
 
-case class Response(code: Int, body: String)
+case class Response(status: Boolean, body: String)
