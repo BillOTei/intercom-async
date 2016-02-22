@@ -6,6 +6,8 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
+import scala.util.Try
+
 // Todo Add Telecom validation or better user validation if necessary
 case class User(
   firstName: String,
@@ -52,8 +54,23 @@ object User {
     (JsPath \ "nbOfOwnedPlaces").read[Int]
   )(User.apply _)
 
+  /**
+    * Deal with the java uglyness to perform some basic formatting of the intercom user
+    *
+    * @param user: the user wrapper here
+    * @return
+    */
   def getBasicIntercomUser(user: User): IntercomUser = new IntercomUser().setName(user.firstName + " " + user.lastName).
-  setEmail(user.email)
+    setEmail(user.email).addCustomAttribute(CustomAttribute.newStringAttribute("mobilePhone", user.mobilePhone.getOrElse(""))).
+    addCustomAttribute(CustomAttribute.newStringAttribute("uiLang", user.uiLang)).addCustomAttribute(CustomAttribute.newStringAttribute("browserLang", user.browserLang)).
+    addCustomAttribute(CustomAttribute.newLongAttribute("signupDate", user.signupDate)).addCustomAttribute(CustomAttribute.newLongAttribute("lastSeenDate", user.lastSeenDate)).
+    addCustomAttribute(CustomAttribute.newIntegerAttribute("nbOfPendingPlaces", user.nbOfPendingPlaces)).addCustomAttribute(CustomAttribute.newIntegerAttribute("nbOfManagedPlaces", user.nbOfManagedPlaces)).
+    addCustomAttribute(CustomAttribute.newIntegerAttribute("nbOfViewablePlaces", user.nbOfViewablePlaces)).addCustomAttribute(CustomAttribute.newIntegerAttribute("nbOfOwnedPlaces", user.nbOfOwnedPlaces))
 
-  def setIntercomCustomFields = ???
+  /**
+    * Try to create a basic user on intercom's side
+    * @param user: the user wrapper here
+    * @return
+    */
+  def createBasicIntercomUser(user: User): Try[IntercomUser] = Try(IntercomUser.create(getBasicIntercomUser(user)))
 }
