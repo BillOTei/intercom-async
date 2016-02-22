@@ -12,7 +12,8 @@ libraryDependencies ++= Seq(
   ws,
   specs2 % Test,
   "com.typesafe.akka" %% "akka-remote" % "2.3.4",
-  "com.typesafe.akka" %% "akka-stream-experimental" % "2.0.1"
+  "com.typesafe.akka" %% "akka-stream-experimental" % "2.0.1",
+  "io.intercom" % "intercom-java" % "1.3.1"
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
