@@ -1,5 +1,6 @@
 package service.actors
 
+import akka.actor.Status.Failure
 import akka.actor.{Props, Actor}
 
 import models.{Response, Message}
@@ -30,12 +31,8 @@ class Intercom extends Actor {
 
   def receive = {
     case GetMessage(msg: Message) => msg.payload.validate(payloadReads) match {
-      case p: JsSuccess[Payload] =>
-      case e: JsError =>
-        Logger.error(s"Intercom payload validation failed: ${msg.payload.toString}")
-        sender ! Response(status = false, msg.payload.toString)
+      case p: JsSuccess[Payload] => Logger.info(p.value.toString)
+      case e: JsError => sender ! Failure(new Throwable(s"Intercom payload validation failed: ${msg.payload.toString}"))
     }
-      sender ! "Hello, "
-
   }
 }
