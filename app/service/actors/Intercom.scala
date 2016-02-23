@@ -29,7 +29,7 @@ class Intercom extends Actor {
   import Intercom._
 
   def receive = {
-    case GetMessage(msg: Message) => msg.payload.validate match {
+    case GetMessage(msg: Message) => msg.payload.validate(payloadReads) match {
       case p: JsSuccess[Payload] =>
       case e: JsError =>
         Logger.error(s"Intercom payload validation failed: ${msg.payload.toString}")

@@ -1,5 +1,8 @@
 package models.intercom
 
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
+
 case class Attribution(
   distribName: String,
   distribRel: String,
@@ -9,3 +12,15 @@ case class Attribution(
   utmSource: Option[String],
   utmContent: Option[String]
 )
+
+object Attribution {
+  implicit val attributionReads: Reads[Attribution] = (
+    (JsPath \ "distribName").read[String] and
+    (JsPath \ "distribRel").read[String] and
+    (JsPath \ "utmCampaign").readNullable[String] and
+    (JsPath \ "utmTerm").readNullable[String] and
+    (JsPath \ "utmMedium").readNullable[String] and
+    (JsPath \ "utmSource").readNullable[String] and
+    (JsPath \ "utmContent").readNullable[String]
+  )(Attribution.apply _)
+}

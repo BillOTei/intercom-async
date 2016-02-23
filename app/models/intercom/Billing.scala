@@ -1,5 +1,8 @@
 package models.intercom
 
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
+
 case class Billing(
   companyName: String,
   VAT: Option[String],
@@ -8,3 +11,14 @@ case class Billing(
   paymentMean: String,
   activeSubscriptionsNb: Int
 )
+
+object Billing {
+  implicit val billingReads: Reads[Billing] = (
+    (JsPath \ "companyName").read[String] and
+    (JsPath \ "VAT").readNullable[String] and
+    (JsPath \ "companyAddress").read[String] and
+    (JsPath \ "companyCountry").read[String] and
+    (JsPath \ "paymentMean").read[String] and
+    (JsPath \ "activeSubscriptionsNb").read[Int]
+  )(Billing.apply _)
+}
