@@ -64,6 +64,7 @@ object Company {
     * @return
     */
   def getBasicIntercomCompany(company: Company): IntercomCompany = new IntercomCompany().
+    setCompanyID("centralapp-" + company.centralAppId.toString).
     addCustomAttribute(CustomAttribute.newLongAttribute("central_app_id", company.centralAppId)).
     setName(company.name).
     addCustomAttribute(CustomAttribute.newStringAttribute("email", company.email)).
