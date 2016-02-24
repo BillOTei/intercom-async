@@ -4,12 +4,9 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl._
 import akka.util.ByteString
-
-import models.{Response, Message}
-
+import models.Message
 import play.Logger
 import play.api.libs.json.Json
-
 import service.actors.ForwardActor
 import service.actors.ForwardActor.Forward
 
@@ -46,7 +43,7 @@ object Server {
         Logger.info("Event server started, listening on: " + b.localAddress)
       case Failure(e) =>
         Logger.info(s"Event server could not bind to $address:$port: ${e.getMessage}")
-        system.shutdown()
+        system.terminate()
     }
   }
 

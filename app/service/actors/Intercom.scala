@@ -6,7 +6,6 @@ import akka.actor.{Props, Actor}
 import models.{Response, Message}
 import models.intercom.User
 
-import play.Logger
 import play.api.Play
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
@@ -39,10 +38,12 @@ class Intercom extends Actor {
     case GetMessage(msg: Message) => msg.payload.validate(payloadReads) match {
       case p: JsSuccess[Payload] =>
         if (p.value.user.isDefined) {
-          User.createBasicIntercomUser(p.value.user.get) match {
-            case Success(u) => sender ! Response(status = true, s"Intercom user created: ${u.getId}")
-            case scala.util.Failure(e) => sender ! Failure(e)
-          }
+          if (User.isValid(p.value.user.get)) {
+            User.createBasicIntercomUser(p.value.user.get) match {
+              case Success(u) => sender ! Response(status = true, s"Intercom user created: ${u.getId}")
+              case scala.util.Failure(e) => sender ! Failure(e)
+            }
+          } else sender ! Failure(new Throwable(s"Intercom user invalid: ${p.value.toString}"))
         } else sender ! Failure(new Throwable(s"Intercom payload unknown: ${p.value.toString}"))
 
       case e: JsError => sender ! Failure(new Throwable(s"Intercom payload validation failed: ${msg.payload.toString}"))

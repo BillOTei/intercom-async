@@ -7,8 +7,8 @@ import play.api.libs.json._
 
 import scala.util.Try
 
-// Todo Add Telecom validation or better user validation if necessary
 case class User(
+  centralAppId: Long,
   firstName: String,
   lastName: String,
   mobilePhone: Option[String],
@@ -17,8 +17,8 @@ case class User(
   browserLang: String = "en",
   attribution: Option[Attribution],
   billingInfo: Option[Billing],
-  signupDate: Long = System.currentTimeMillis / 1000,
-  lastSeenDate: Long = System.currentTimeMillis / 1000,
+  signupDate: Long = System.currentTimeMillis,
+  lastSeenDate: Long = System.currentTimeMillis,
   lastContactedDate: Option[Long],
   lastHeardFromDate: Option[Long],
   nbOfPendingPlaces: Int = 0,
@@ -26,15 +26,10 @@ case class User(
   nbOfViewablePlaces: Int = 0,
   nbOfOwnedPlaces: Int = 0
 )
-  extends IntercomUser {
-  def isValid: Boolean = {
-    !firstName.isEmpty && !lastName.isEmpty && (mobilePhone.isDefined && mobilePhone.get.startsWith("+")) &&
-      """(\w+)@([\w\.]+)""".r.unapplySeq(email).isDefined
-  }
-}
 
 object User {
   implicit val userReads: Reads[User] = (
+    (JsPath \ "centralAppId").read[Long] and
     (JsPath \ "firstName").read[String] and
     (JsPath \ "lastName").read[String] and
     (JsPath \ "mobilePhone").readNullable[String] and
@@ -55,16 +50,26 @@ object User {
 
   /**
     * Deal with the java uglyness to perform some basic formatting of the intercom user
+    * default timezone is used for timestamp conversion
     *
     * @param user: the user wrapper here
     * @return
     */
-  def getBasicIntercomUser(user: User): IntercomUser = new IntercomUser().setName(user.firstName + " " + user.lastName).
-    setEmail(user.email).addCustomAttribute(CustomAttribute.newStringAttribute("mobilePhone", user.mobilePhone.getOrElse(""))).
-    addCustomAttribute(CustomAttribute.newStringAttribute("uiLang", user.uiLang)).addCustomAttribute(CustomAttribute.newStringAttribute("browserLang", user.browserLang)).
-    addCustomAttribute(CustomAttribute.newLongAttribute("signupDate", user.signupDate)).addCustomAttribute(CustomAttribute.newLongAttribute("lastSeenDate", user.lastSeenDate)).
-    addCustomAttribute(CustomAttribute.newIntegerAttribute("nbOfPendingPlaces", user.nbOfPendingPlaces)).addCustomAttribute(CustomAttribute.newIntegerAttribute("nbOfManagedPlaces", user.nbOfManagedPlaces)).
-    addCustomAttribute(CustomAttribute.newIntegerAttribute("nbOfViewablePlaces", user.nbOfViewablePlaces)).addCustomAttribute(CustomAttribute.newIntegerAttribute("nbOfOwnedPlaces", user.nbOfOwnedPlaces))
+  def getBasicIntercomUser(user: User): IntercomUser = new IntercomUser().
+    setName(user.firstName + " " + user.lastName).
+    setEmail(user.email).
+    addCustomAttribute(CustomAttribute.newStringAttribute("mobile_phone", user.mobilePhone.getOrElse(""))).
+    addCustomAttribute(CustomAttribute.newStringAttribute("ui_lang", user.uiLang)).
+    addCustomAttribute(CustomAttribute.newStringAttribute("browser_lang", user.browserLang)).
+    setSignedUpAt(user.signupDate / 1000).
+    setLastRequestAt(user.lastSeenDate / 1000).
+    //addCustomAttribute(CustomAttribute.newStringAttribute("signup_date", new DateTime(user.signupDate).toString("yyyy-MM-dd"))).
+    //addCustomAttribute(CustomAttribute.newStringAttribute("last_seen_date", new DateTime(user.lastSeenDate).toString("yyyy-MM-dd"))).
+    addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_pending_places", user.nbOfPendingPlaces)).
+    addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_managed_places", user.nbOfManagedPlaces)).
+    addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_viewable_places", user.nbOfViewablePlaces)).
+    addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_owned_places", user.nbOfOwnedPlaces)).
+    addCustomAttribute(CustomAttribute.newLongAttribute("centralapp_id", user.centralAppId))
 
   /**
     * Try to create a basic user on intercom's side
@@ -72,4 +77,15 @@ object User {
     * @return
     */
   def createBasicIntercomUser(user: User): Try[IntercomUser] = Try(IntercomUser.create(getBasicIntercomUser(user)))
+
+  /**
+    * Valid the user data
+    * add Telecom validation or better user validation if necessary
+    * @param user: the user wrapper
+    * @return
+    */
+  def isValid(user: User): Boolean = {
+    !user.firstName.isEmpty && !user.lastName.isEmpty && (user.mobilePhone.isEmpty || user.mobilePhone.get.startsWith("+")) &&
+      """(\w+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined
+  }
 }
