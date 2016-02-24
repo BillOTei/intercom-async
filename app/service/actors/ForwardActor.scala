@@ -37,7 +37,6 @@ class ForwardActor extends Actor {
           }
         case _ =>
           Logger.warn(s"Service ${msg.service} not implemented yet")
-          sender ! Response(status = false, msg.payload.toString)
       }
   }
 }
