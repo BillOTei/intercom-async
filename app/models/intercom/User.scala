@@ -77,7 +77,9 @@ object User {
 
   /**
     * Try to create a basic user on intercom's side
- *
+    * it is possible to add a place user relation by adding a companies list
+    * inside the user actor
+    *
     * @param user: the user wrapper here
     * @return
     */
@@ -87,7 +89,7 @@ object User {
     * Valid the user data
     * add Telecom validation or better user validation if necessary
     * not the best email regex but just a sanity check
- *
+    *
     * @param user: the user wrapper
     * @return
     */
