@@ -5,7 +5,7 @@ import play.api.libs.json._
 
 case class Attribution(
   distribName: String,
-  distribRel: String,
+  distribRel: Option[String],
   creatorCentralAppId: Option[Long],
   creatorEmail: Option[String],
   utmCampaign: Option[String],
@@ -18,7 +18,7 @@ case class Attribution(
 object Attribution {
   implicit val attributionReads: Reads[Attribution] = (
     (JsPath \ "distribName").read[String] and
-    (JsPath \ "distribRel").read[String] and
+    (JsPath \ "distribRel").readNullable[String] and
     (JsPath \ "creatorCentralAppId").readNullable[Long] and
     (JsPath \ "creatorEmail").readNullable[String] and
     (JsPath \ "utmCampaign").readNullable[String] and
