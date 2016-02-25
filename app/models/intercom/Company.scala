@@ -85,7 +85,7 @@ object Company {
     addCustomAttribute(CustomAttribute.newStringAttribute("verification_status", company.verificationStatus)).
     addCustomAttribute(CustomAttribute.newDoubleAttribute("completion_score", company.completionScore)).
     addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_actions_to_take", company.nbOfActionsToTake)).
-    addCustomAttribute(CustomAttribute.newStringAttribute("distrib_name", company.attribution.distribName)).
+    addCustomAttribute(CustomAttribute.newStringAttribute("distrib_name", company.attribution.distribName.getOrElse(""))).
     addCustomAttribute(CustomAttribute.newLongAttribute("creatorCentralAppId", company.attribution.creatorCentralAppId.getOrElse(0))).
     addCustomAttribute(CustomAttribute.newStringAttribute("creatorEmail", company.attribution.creatorEmail.getOrElse("")))
 

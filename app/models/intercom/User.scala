@@ -1,11 +1,12 @@
 package models.intercom
 
-import io.intercom.api.{User => IntercomUser, CustomAttribute}
+import io.intercom.api.{User => IntercomUser, CompanyCollection, CustomAttribute}
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 import scala.util.Try
+import scala.collection.JavaConverters._
 
 case class User(
   centralAppId: Long,
@@ -24,7 +25,8 @@ case class User(
   nbOfPendingPlaces: Int = 0,
   nbOfManagedPlaces: Int = 0,
   nbOfViewablePlaces: Int = 0,
-  nbOfOwnedPlaces: Int = 0
+  nbOfOwnedPlaces: Int = 0,
+  companies: Option[List[Company]]
 )
 
 object User {
@@ -45,7 +47,8 @@ object User {
     (JsPath \ "nbOfPendingPlaces").read[Int] and
     (JsPath \ "nbOfManagedPlaces").read[Int] and
     (JsPath \ "nbOfViewablePlaces").read[Int] and
-    (JsPath \ "nbOfOwnedPlaces").read[Int]
+    (JsPath \ "nbOfOwnedPlaces").read[Int] and
+    (JsPath \ "companies").readNullable[List[Company]]
   )(User.apply _)
 
   /**
@@ -69,10 +72,12 @@ object User {
     addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_managed_places", user.nbOfManagedPlaces)).
     addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_viewable_places", user.nbOfViewablePlaces)).
     addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_owned_places", user.nbOfOwnedPlaces)).
-    addCustomAttribute(CustomAttribute.newLongAttribute("centralapp_id", user.centralAppId))
+    addCustomAttribute(CustomAttribute.newLongAttribute("centralapp_id", user.centralAppId)).
+    setCompanyCollection(new CompanyCollection(user.companies.getOrElse(List.empty).map(Company.getBasicIntercomCompany).asJava))
 
   /**
     * Try to create a basic user on intercom's side
+ *
     * @param user: the user wrapper here
     * @return
     */
@@ -82,11 +87,14 @@ object User {
     * Valid the user data
     * add Telecom validation or better user validation if necessary
     * not the best email regex but just a sanity check
+ *
     * @param user: the user wrapper
     * @return
     */
   def isValid(user: User): Boolean = {
     !user.firstName.isEmpty && !user.lastName.isEmpty && (user.mobilePhone.isEmpty || user.mobilePhone.get.startsWith("+")) &&
-      """([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined
+    """([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined &&
+    (user.companies.isEmpty || user.companies.get.map(Company.isValid).forall(_ == true)) &&
+    (user.companies.isEmpty || user.companies.get.map(_.attribution.creatorCentralAppId.getOrElse(0) == user.centralAppId).forall(_ == true))
   }
 }

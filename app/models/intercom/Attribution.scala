@@ -4,7 +4,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class Attribution(
-  distribName: String,
+  distribName: Option[String],
   distribRel: Option[String],
   creatorCentralAppId: Option[Long],
   creatorEmail: Option[String],
@@ -17,7 +17,7 @@ case class Attribution(
 
 object Attribution {
   implicit val attributionReads: Reads[Attribution] = (
-    (JsPath \ "distribName").read[String] and
+    (JsPath \ "distribName").readNullable[String] and
     (JsPath \ "distribRel").readNullable[String] and
     (JsPath \ "creatorCentralAppId").readNullable[Long] and
     (JsPath \ "creatorEmail").readNullable[String] and
