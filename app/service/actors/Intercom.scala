@@ -28,6 +28,8 @@ object Intercom {
     )(Payload.apply _)
 }
 
+// Todo add persistence system
+// Todo add controller access
 class Intercom extends Actor {
   import Intercom._
 
