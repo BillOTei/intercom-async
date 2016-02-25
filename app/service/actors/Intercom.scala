@@ -51,6 +51,12 @@ class Intercom extends Actor {
     }
   }
 
+  /**
+    * Just a handler for the Try of intercom interaction
+    * @param t: the Try result
+    * @param sender: the actor sender ref
+    * @tparam T: User, Company, Event...
+    */
   def handleIntercomResponse[T](t: Try[T], sender: ActorRef) = t match {
     case Success(u) => sender ! Response(status = true, s"Intercom resource created: ${u.toString}")
     case scala.util.Failure(e) => sender ! Failure(e)
