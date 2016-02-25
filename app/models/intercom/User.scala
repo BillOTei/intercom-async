@@ -81,11 +81,12 @@ object User {
   /**
     * Valid the user data
     * add Telecom validation or better user validation if necessary
+    * not the best email regex but just a sanity check
     * @param user: the user wrapper
     * @return
     */
   def isValid(user: User): Boolean = {
     !user.firstName.isEmpty && !user.lastName.isEmpty && (user.mobilePhone.isEmpty || user.mobilePhone.get.startsWith("+")) &&
-      """(\w+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined
+      """([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined
   }
 }

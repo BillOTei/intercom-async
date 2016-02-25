@@ -95,4 +95,17 @@ object Company {
     * @return
     */
   def createBasicCompany(company: Company): Try[IntercomCompany] = Try(IntercomCompany.create(getBasicIntercomCompany(company)))
+
+  /**
+    * Basic validation of the company data
+    * not the best email regex but just sanity check
+    * @param company: the place company data
+    * @return
+    */
+  def isValid(company: Company): Boolean = {
+    company.centralAppId > 0 && !company.name.isEmpty && !company.countryCode.isEmpty && !company.locality.isEmpty &&
+    !company.zip.isEmpty && !company.address.isEmpty && """([\w\.]+)@([\w\.]+)""".r.unapplySeq(company.email).isDefined &&
+    company.attribution.creatorCentralAppId.isDefined &&
+    (company.attribution.creatorEmail.isEmpty || """([\w\.]+)@([\w\.]+)""".r.unapplySeq(company.attribution.creatorEmail.get).isDefined)
+  }
 }

@@ -40,15 +40,18 @@ class Intercom extends Actor {
         if (p.value.user.isDefined) {
 
           if (User.isValid(p.value.user.get)) handleIntercomResponse(User.createBasicIntercomUser(p.value.user.get), sender)
-
           else sender ! Failure(new Throwable(s"Intercom user invalid: ${p.value.toString}"))
 
-        } else if (p.value.place.isDefined) handleIntercomResponse(Company.createBasicCompany(p.value.place.get), sender)
+        } else if (p.value.place.isDefined) {
 
-        else sender ! Failure(new Throwable(s"Intercom payload unknown: ${p.value.toString}"))
+          if (Company.isValid(p.value.place.get)) handleIntercomResponse(Company.createBasicCompany(p.value.place.get), sender)
+          else sender ! Failure(new Throwable(s"Intercom company place invalid: ${p.value.toString}"))
+
+        } else sender ! Failure(new Throwable(s"Intercom payload unknown: ${p.value.toString}"))
 
       case e: JsError => sender ! Failure(new Throwable(s"Intercom payload validation failed: ${msg.payload.toString}"))
     }
+    case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
   }
 
   /**
