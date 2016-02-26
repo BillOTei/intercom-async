@@ -4,7 +4,7 @@ import akka.actor.{ActorSystem, Props, Actor}
 import akka.pattern.ask
 import akka.util.Timeout
 
-import models.{Response, Message}
+import models.{Payload, Response, Message}
 
 import play.Logger
 import play.api.libs.concurrent.Execution.Implicits._
@@ -28,15 +28,18 @@ class ForwardActor extends Actor {
 
   def receive = {
     case Forward(msg: Message) =>
-      msg.service match {
-        case "intercom" =>
+      msg.event match {
+        case "placeuser-creation" => (msg.payload.user, msg.payload.place) match {
+          case (u: User, p: Com)
+        }
+
           Logger.info("Forwarding message to intercom...")
           (context.actorOf(Intercom.props) ? GetMessage(msg)).mapTo[Response].onComplete {
             case Success(response) => Logger.info(response.body)
             case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
           }
         case _ =>
-          Logger.warn(s"Service ${msg.service} not implemented yet")
+          Logger.warn(s"Service ${msg.event} not implemented yet")
       }
   }
 }

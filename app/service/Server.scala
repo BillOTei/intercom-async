@@ -6,7 +6,7 @@ import akka.stream.scaladsl._
 import akka.util.ByteString
 import models.Message
 import play.Logger
-import play.api.libs.json.Json
+import play.api.libs.json.{JsError, JsSuccess, Json}
 import service.actors.ForwardActor
 import service.actors.ForwardActor.Forward
 
@@ -15,6 +15,7 @@ import scala.util.{Failure, Success}
 object Server {
   /**
     * Create the listener client for the reactive stream system
+    *
     * @param system: akka actor system
     * @param address: server string attributed address
     * @param port: the address port
@@ -50,6 +51,7 @@ object Server {
   /**
     * Handler for the incoming concatened message pieces from a publisher in the stream
     * converts it to an Option[Message] and forwards to the main actor for dispatch
+    *
     * @param system: the akka actor system reference
     * @param stringMsg: the message
     * @return
@@ -57,10 +59,9 @@ object Server {
   def handleIncomingMessages(system: ActorSystem, stringMsg: String): String = {
     Logger.info("Event server received message: " + stringMsg)
     // Forward the message to the appropriate actor, ask for the response
-    Message.asOption(Json.parse(stringMsg)) match {
-      case Some(m) =>
-        system.actorOf(ForwardActor.props) ! Forward(m)
-      case None => Logger.error(s"Message invalid $stringMsg")
+    Json.parse(stringMsg).validate(Message.messageReads) match {
+      case m: JsSuccess[Message] => system.actorOf(ForwardActor.props) ! Forward(m.value)
+      case e: JsError => Logger.error(s"Message invalid $stringMsg")
     }
     // Output the strmsg for bytestring conversion to respond to the publisher
     // same message sent back means transmission went ok on the publisher side
