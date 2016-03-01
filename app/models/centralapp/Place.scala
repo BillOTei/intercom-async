@@ -7,7 +7,6 @@ case class Place(
                     centralAppId: Long,
                     name: String,
                     email: Option[String],
-                    inChain: Boolean,
                     chainName: Option[String],
                     countryCode: String,
                     locality: String,
@@ -18,9 +17,8 @@ case class Place(
                     landlinePhone: Option[String],
                     mobilePhone: Option[String],
                     website: Option[String],
-                    primaryCatFirstLvl: Option[String],
-                    primaryCatLastLvl: Option[String],
-                    signupDate: Long,
+                    categories: Option[JsArray],
+                    signupDate: String,
                     verificationStatus: Boolean,
                     completionScore: Double,
                     nbOfActionsToTake: Option[Int],
@@ -33,8 +31,7 @@ object Place {
     (JsPath \ "id").read[Long] and
     (JsPath \ "name").read[String] and
     (JsPath \ "email").readNullable[String] and
-    (JsPath \ "inChain").read[Boolean] and
-    (JsPath \ "chainName").readNullable[String] and
+    (JsPath \ "chain" \ "name").readNullable[String] and
     (JsPath \ "location" \ "translated_addresses" \ user.uiLang \ "country" \ "short_name").read[String].
       orElse((JsPath \ "location" \ "address" \ "country" \ "short_name").read[String]) and
     (JsPath \ "location" \ "translated_addresses" \ user.uiLang \ "locality" \ "name").read[String].
@@ -47,9 +44,8 @@ object Place {
     (JsPath \ "primary_phone" \ "international").readNullable[String] and
     (JsPath \ "mobile" \ "international").readNullable[String] and
     (JsPath \ "website").readNullable[String] and
-    (JsPath \ "primaryCatFirstLvl").readNullable[String] and
-    (JsPath \ "primaryCatLastLvl").readNullable[String] and
-    (JsPath \ "signupDate").read[Long] and
+    (JsPath \ "categories").readNullable[JsArray] and
+    (JsPath \ "created").read[String] and
     (JsPath \ "verified").read[Boolean] and
     (JsPath \ "completion_percent").read[Double] and
     (JsPath \ "nbOfActionsToTake").readNullable[Int] and
