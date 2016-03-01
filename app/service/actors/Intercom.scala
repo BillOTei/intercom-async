@@ -1,31 +1,18 @@
 package service.actors
 
 import akka.actor.Status.Failure
-import akka.actor.{ActorRef, Props, Actor}
-
-import models.{Response, Message}
-import models.intercom.{User, Company}
-
+import akka.actor.{Actor, ActorRef, Props}
+import models.Response
+import models.centralapp.{Place, User => CentralAppUser}
+import models.intercom.{Company, User}
 import play.api.Play
-import play.api.libs.functional.syntax._
-import play.api.libs.json.Reads._
-import play.api.libs.json._
 
-import scala.util.{Try, Success}
+import scala.util.{Success, Try}
 
 object Intercom {
   def props = Props[Intercom]
 
-  case class GetMessage(msg: Message)
-
-  case class Payload(action: String, user: Option[User], place: Option[Company]/*, event: Option[Event]*/)
-
-  implicit val payloadReads: Reads[Payload] = (
-      (JsPath \ "action").read[String] and
-      (JsPath \ "user").readNullable[User] and
-      (JsPath \ "place").readNullable[Company] /*and
-      (JsPath \ "event").readNullable[Event]*/
-    )(Payload.apply _)
+  case class PlaceUserMessage(user: CentralAppUser, place: Place)
 }
 
 // Todo add persistence system
@@ -37,21 +24,11 @@ class Intercom extends Actor {
   io.intercom.api.Intercom.setAppID(Play.current.configuration.getString("intercom.appid").getOrElse(""))
 
   def receive = {
-    case GetMessage(msg: Message) => msg.payload.validate(payloadReads) match {
-      case p: JsSuccess[Payload] =>
-        if (p.value.user.isDefined) {
-
-          if (User.isValid(p.value.user.get)) handleIntercomResponse(User.createBasicIntercomUser(p.value.user.get), sender)
-          else sender ! Failure(new Throwable(s"Intercom user invalid: ${p.value.toString}"))
-
-        } else if (p.value.place.isDefined) {
-
-          if (Company.isValid(p.value.place.get)) handleIntercomResponse(Company.createBasicCompany(p.value.place.get), sender)
-          else sender ! Failure(new Throwable(s"Intercom company place invalid: ${p.value.toString}"))
-
-        } else sender ! Failure(new Throwable(s"Intercom payload unknown: ${p.value.toString}"))
-
-      case e: JsError => sender ! Failure(new Throwable(s"Intercom payload validation failed: ${msg.payload.toString}"))
+    case PlaceUserMessage(user: CentralAppUser, place: Place) => (User.isValid(user), Company.isValid(place)) match {
+      case (false, false) => sender ! Failure(new Throwable(s"Intercom user & place invalid: ${user.toString} ${place.toString}"))
+      case (true, false) => sender ! Failure(new Throwable(s"Intercom place invalid: ${place.toString}"))
+      case (false, true) => sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
+      case _ => handleIntercomResponse(User.createBasicIntercomUser(user, Some(List(place))), sender)
     }
     case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
   }
