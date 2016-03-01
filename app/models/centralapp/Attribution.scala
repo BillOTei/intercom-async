@@ -1,4 +1,4 @@
-package models.intercom
+package models.centralapp
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
