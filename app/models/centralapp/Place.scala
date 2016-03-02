@@ -12,6 +12,7 @@ case class Place(
                     locality: String,
                     zip: String,
                     address: String,
+                    streetNumber: String,
                     defaultLang: Option[String],
                     openingDates: Option[String],
                     landlinePhone: Option[String],
@@ -39,6 +40,8 @@ object Place {
     (JsPath \ "location" \ "address" \ "locality" \ "postal_code").read[String] and
     (JsPath \ "location" \ "translated_addresses" \ user.uiLang \ "street" \ "name").read[String].
       orElse((JsPath \ "location" \ "address" \ "street" \ "name").read[String]) and
+    (JsPath \ "location" \ "translated_addresses" \ user.uiLang \ "street_number").read[String].
+      orElse((JsPath \ "location" \ "address" \ "street_number").read[String]) and
     (JsPath \ "defaultLang").readNullable[String] and
     (JsPath \ "openingDates").readNullable[String] and
     (JsPath \ "primary_phone" \ "international").readNullable[String] and

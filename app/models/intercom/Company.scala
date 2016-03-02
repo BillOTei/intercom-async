@@ -15,7 +15,7 @@ object Company {
     * @return
     */
   def getBasicIntercomCompany(company: Place): IntercomCompany = new IntercomCompany().
-      setCompanyID("centralapp-" + company.centralAppId.toString).
+      setCompanyID(company.centralAppId.toString).
       addCustomAttribute(CustomAttribute.newLongAttribute("place_id", company.centralAppId)).
       setName(company.name).
       addCustomAttribute(CustomAttribute.newStringAttribute("place_email", company.email.getOrElse(""))).
@@ -24,7 +24,7 @@ object Company {
       addCustomAttribute(CustomAttribute.newStringAttribute("country_code", company.countryCode)).
       addCustomAttribute(CustomAttribute.newStringAttribute("locality", company.locality)).
       addCustomAttribute(CustomAttribute.newStringAttribute("zip_code", company.zip)).
-      addCustomAttribute(CustomAttribute.newStringAttribute("full_address", company.address)).
+      addCustomAttribute(CustomAttribute.newStringAttribute("full_address", company.address + " " + company.streetNumber)).
       addCustomAttribute(CustomAttribute.newStringAttribute("default_language", company.defaultLang.getOrElse(""))).
       addCustomAttribute(CustomAttribute.newStringAttribute("opening_date", company.openingDates.getOrElse(""))).
       addCustomAttribute(CustomAttribute.newStringAttribute("primary_phone", company.landlinePhone.getOrElse(""))).
@@ -77,7 +77,7 @@ object Company {
     */
   def toJson(company: Place) = Json.obj(
     "name" -> company.name,
-    "company_id" -> ("centralapp-" + company.centralAppId.toString),
+    "company_id" -> company.centralAppId.toString,
     "remote_created_at" -> DateTime.parse(company.signupDate).getMillis / 1000,
     "custom_attributes" -> Json.obj(
       "place_id" -> company.centralAppId,
@@ -87,7 +87,7 @@ object Company {
       "country_code" -> company.countryCode,
       "locality" -> company.locality,
       "zip_code" -> company.zip,
-      "full_address" -> company.address,
+      "full_address" -> JsString(company.address + " " + company.streetNumber),
       "default_language" -> JsString(company.defaultLang.getOrElse("")),
       "opening_date" -> JsString(company.openingDates.getOrElse("")),
       "primary_phone" -> JsString(company.landlinePhone.getOrElse("")),
