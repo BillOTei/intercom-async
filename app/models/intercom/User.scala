@@ -1,11 +1,12 @@
 package models.intercom
 
-import io.intercom.api.{User => IntercomUser, CompanyCollection, CustomAttribute}
+import io.intercom.api.{CompanyCollection, CustomAttribute, User => IntercomUser}
 import models.centralapp.{Place, User => CentralAppUser}
 import org.joda.time.DateTime
+import play.api.libs.json.Json
 
-import scala.util.Try
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 object User {
   /**
@@ -20,8 +21,8 @@ object User {
     setName(user.firstName + " " + user.lastName).
     setEmail(user.email).
     addCustomAttribute(CustomAttribute.newStringAttribute("phone", user.mobilePhone.getOrElse(""))).
-    addCustomAttribute(CustomAttribute.newStringAttribute("ui_lang", user.uiLang)).
-    addCustomAttribute(CustomAttribute.newStringAttribute("browser_lang", user.browserLang.getOrElse(""))).
+    addCustomAttribute(CustomAttribute.newStringAttribute("interface_language", user.uiLang)).
+    addCustomAttribute(CustomAttribute.newStringAttribute("browser_language", user.browserLang.getOrElse(""))).
     setSignedUpAt(user.signupDate / 1000).
     //setLastRequestAt(user.lastSeenDate / 1000).
     //addCustomAttribute(CustomAttribute.newStringAttribute("signup_date_db", new DateTime(user.signupDate).toString("yyyy-MM-dd"))).
@@ -57,5 +58,31 @@ object User {
     """([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined
     //&& (user.places.isEmpty || user.places.get.map(Company.isValid).forall(_ == true))
     //&& (user.companies.isEmpty || user.companies.get.map(_.attribution.creatorCentralAppId.getOrElse(0) == user.centralAppId).forall(_ == true))
+  }
+
+  /**
+    * The user to json for ws post service mainly
+    * @param user: the user reference obj
+    * @param company: the optional company i.e. place on centralapp to be added to intercom
+    * @return
+    */
+  def toJson(user: CentralAppUser, company: Option[Place]) = Json.obj(
+    "name" -> (user.firstName + " " + user.lastName),
+    "email" -> user.email,
+    "signed_up_at" -> user.signupDate / 1000,
+    "custom_attributes" -> Json.obj(
+      "phone" -> user.mobilePhone.getOrElse(""),
+      "interface_language" -> user.uiLang,
+      "browser_language" -> user.browserLang.getOrElse(""),
+      "last_seen_date_db" -> new DateTime(user.lastSeenDate).toString("yyyy-MM-dd"),
+      "nb_of_pending_places" -> user.nbOfPendingPlaces.getOrElse(0),
+      "nb_of_managed_places" -> user.nbOfManagedPlaces.getOrElse(0),
+      "nb_of_viewable_places" -> user.nbOfViewablePlaces.getOrElse(0),
+      "nb_of_owned_places" -> user.nbOfOwnedPlaces.getOrElse(0),
+      "centralapp_id" -> user.centralAppId
+    )
+  ) ++ {
+    if (company.isDefined) Json.obj("companies" -> Json.arr(Company.toJson(company.get)))
+    else Json.obj()
   }
 }
