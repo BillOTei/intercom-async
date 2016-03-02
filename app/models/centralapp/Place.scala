@@ -22,7 +22,7 @@ case class Place(
                     verificationStatus: Boolean,
                     completionScore: Double,
                     nbOfActionsToTake: Option[Int],
-                    billing: Option[CompanyBilling],
+                    billing: Option[PlaceBilling],
                     attribution: Option[Attribution]
                   )
 
@@ -49,7 +49,7 @@ object Place {
     (JsPath \ "verified").read[Boolean] and
     (JsPath \ "completion_percent").read[Double] and
     (JsPath \ "nbOfActionsToTake").readNullable[Int] and
-    (JsPath \ "billing").readNullable[CompanyBilling] and
+    (JsPath \ "billing").readNullable[PlaceBilling] and
     (JsPath \ "attribution").readNullable[Attribution]
     )(Place.apply _)
 }

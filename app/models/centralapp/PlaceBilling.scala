@@ -3,7 +3,7 @@ package models.centralapp
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class CompanyBilling(
+case class PlaceBilling(
   planName: String,
   couponUsed: Boolean = false,
   yearlySpent: Double,
@@ -12,13 +12,13 @@ case class CompanyBilling(
   planExpirationDate: Long
 )
 
-object CompanyBilling {
-  implicit val billingReads: Reads[CompanyBilling] = (
+object PlaceBilling {
+  implicit val billingReads: Reads[PlaceBilling] = (
     (JsPath \ "planName").read[String] and
     (JsPath \ "couponUsed").read[Boolean] and
     (JsPath \ "yearlySpent").read[Double] and
     (JsPath \ "paymentMethod").read[String] and
     (JsPath \ "planPayed").read[Boolean] and
     (JsPath \ "planExpirationDate").read[Long]
-  ) (CompanyBilling.apply _)
+  ) (PlaceBilling.apply _)
 }
