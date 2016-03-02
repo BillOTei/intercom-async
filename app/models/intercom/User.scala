@@ -3,7 +3,7 @@ package models.intercom
 import io.intercom.api.{CompanyCollection, CustomAttribute, User => IntercomUser}
 import models.centralapp.{Place, User => CentralAppUser}
 import org.joda.time.DateTime
-import play.api.libs.json.Json
+import play.api.libs.json.{JsNumber, JsString, Json}
 
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -71,14 +71,14 @@ object User {
     "email" -> user.email,
     "signed_up_at" -> user.signupDate / 1000,
     "custom_attributes" -> Json.obj(
-      "phone" -> user.mobilePhone.getOrElse(""),
+      "phone" -> JsString(user.mobilePhone.getOrElse("")),
       "interface_language" -> user.uiLang,
-      "browser_language" -> user.browserLang.getOrElse(""),
+      "browser_language" -> JsString(user.browserLang.getOrElse("")),
       "last_seen_date_db" -> new DateTime(user.lastSeenDate).toString("yyyy-MM-dd"),
-      "nb_of_pending_places" -> user.nbOfPendingPlaces.getOrElse(0),
-      "nb_of_managed_places" -> user.nbOfManagedPlaces.getOrElse(0),
-      "nb_of_viewable_places" -> user.nbOfViewablePlaces.getOrElse(0),
-      "nb_of_owned_places" -> user.nbOfOwnedPlaces.getOrElse(0),
+      "nb_of_pending_places" -> Json.toJson(user.nbOfPendingPlaces.getOrElse(0)),
+      "nb_of_managed_places" -> Json.toJson(user.nbOfManagedPlaces.getOrElse(0)),
+      "nb_of_viewable_places" -> Json.toJson(user.nbOfViewablePlaces.getOrElse(0)),
+      "nb_of_owned_places" -> Json.toJson(user.nbOfOwnedPlaces.getOrElse(0)),
       "centralapp_id" -> user.centralAppId
     )
   ) ++ {

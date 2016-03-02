@@ -3,7 +3,7 @@ package models.intercom
 import io.intercom.api.{Company => IntercomCompany, CustomAttribute}
 import models.centralapp.{Category, Place}
 import org.joda.time.DateTime
-import play.api.libs.json.Json
+import play.api.libs.json.{JsNumber, JsString, Json}
 
 import scala.util.Try
 
@@ -71,6 +71,7 @@ object Company {
 
   /**
     * The company to json obj
+    *
     * @param company: the intercom company, meaning a place for centralapp
     * @return
     */
@@ -82,24 +83,24 @@ object Company {
       "place_id" -> company.centralAppId,
       "place_email" -> company.email,
       "in_chain" -> company.chainName.isDefined,
-      "chain_name" -> company.chainName.getOrElse(""),
+      "chain_name" -> JsString(company.chainName.getOrElse("")),
       "country_code" -> company.countryCode,
       "locality" -> company.locality,
       "zip_code" -> company.zip,
       "full_address" -> company.address,
-      "default_language" -> company.defaultLang.getOrElse(""),
-      "opening_date" -> company.openingDates.getOrElse(""),
-      "primary_phone" -> company.landlinePhone.getOrElse(""),
-      "mobile_phone" -> company.mobilePhone.getOrElse(""),
-      "website" -> company.website.getOrElse(""),
-      "primary_cat_first_lvl" -> Category.getPrimaryOpt(company.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse(""),
-      "primary_cat_last_lvl" -> Category.getLastPrimaryOpt(company.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse(""),
+      "default_language" -> JsString(company.defaultLang.getOrElse("")),
+      "opening_date" -> JsString(company.openingDates.getOrElse("")),
+      "primary_phone" -> JsString(company.landlinePhone.getOrElse("")),
+      "mobile_phone" -> JsString(company.mobilePhone.getOrElse("")),
+      "website" -> JsString(company.website.getOrElse("")),
+      "primary_cat_first_lvl" -> JsString(Category.getPrimaryOpt(company.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse("")),
+      "primary_cat_last_lvl" -> JsString(Category.getLastPrimaryOpt(company.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse("")),
       "verification_status" -> company.verificationStatus,
       "completion_score" -> company.completionScore,
-      "nb_of_actions_to_take" -> company.nbOfActionsToTake.getOrElse(0),
-      "distributor_name" -> company.attribution.flatMap(_.distribName).getOrElse(""),
+      "nb_of_actions_to_take" -> Json.toJson(company.nbOfActionsToTake.getOrElse(0)),
+      "distributor_name" -> JsString(company.attribution.flatMap(_.distribName).getOrElse("")),
       "owner_user_id" -> company.attribution.flatMap(_.creatorCentralAppId).getOrElse(0).toString,
-      "owner_user_email" -> company.attribution.flatMap(_.creatorEmail).getOrElse("")
+      "owner_user_email" -> JsString(company.attribution.flatMap(_.creatorEmail).getOrElse(""))
     )
   )
 }
