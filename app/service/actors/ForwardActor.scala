@@ -32,7 +32,7 @@ class ForwardActor extends Actor {
     case Forward(msg: Message) =>
       msg.event match {
         case "placeuser-creation" => (msg.payload \ "user").validate(User.userReads) match {
-          case u: JsSuccess[User] => (msg.payload \ "place").validate(Place.placeReads(u.value)) match {
+          case u: JsSuccess[User] => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
             case p: JsSuccess[Place] =>
               Logger.info("Forwarding message to intercom...")
               (context.actorOf(IntercomActor.props) ? PlaceUserMessage(u.value, p.value)).mapTo[Response].onComplete {
