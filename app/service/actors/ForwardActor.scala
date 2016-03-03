@@ -1,21 +1,18 @@
 package service.actors
 
-import akka.actor.{ActorSystem, Props, Actor}
+import akka.actor.{Actor, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-
-import models.{Response, Message}
-import models.centralapp.{User, Place}
-
+import models.centralapp.{Place, User}
+import models.{Message, Response}
 import play.Logger
 import play.api.libs.concurrent.Execution.Implicits._
-
-import IntercomActor.PlaceUserMessage
 import play.api.libs.json.{JsError, JsSuccess}
+import service.actors.IntercomActor.PlaceUserMessage
 
-import scala.util.{Failure, Success}
-import scala.language.postfixOps
 import scala.concurrent.duration._
+import scala.language.postfixOps
+import scala.util.{Failure, Success}
 
 object ForwardActor {
   def props = Props[ForwardActor]
