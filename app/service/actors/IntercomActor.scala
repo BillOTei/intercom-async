@@ -6,6 +6,7 @@ import models.Response
 import models.centralapp.{Place, User => CentralAppUser}
 import models.intercom.{Company, User}
 import play.api.Play.current
+import play.api.libs.json.JsObject
 import play.api.libs.ws._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -15,6 +16,8 @@ object IntercomActor {
   def props = Props[IntercomActor]
 
   case class PlaceUserMessage(user: CentralAppUser, place: Place)
+
+  case class PlaceMessage(place: Place)
 }
 
 // Todo add persistence system
@@ -30,32 +33,47 @@ class IntercomActor extends Actor {
       case (false, false) => sender ! Failure(new Throwable(s"Intercom user & company invalid: ${user.toString} ${place.toString}"))
       case (true, false) => sender ! Failure(new Throwable(s"Intercom company invalid: ${place.toString}"))
       case (false, true) => sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
-      case _ =>
-        // Not used anymore as java lib not async
-        //handleIntercomResponse(User.createBasicIntercomUser(user, Some(List(place))), sender)
-
-        // Move this call in a proper helper if needed somewhere else
-        handleAsyncIntercomResponse(
-          Try(
-            WS.url(current.configuration.getString("intercom.apiurl").getOrElse("") + "/users").
-            withAuth(
-              current.configuration.getString("intercom.appid").getOrElse(""),
-              current.configuration.getString("intercom.apikey").getOrElse(""),
-              WSAuthScheme.BASIC
-            ).
-            withRequestTimeout(5000).
-            withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json").
-            post(User.toJson(user, Some(place)))
-          ),
-          sender
-        )
+      case _ => postDataToApi("users", User.toJson(user, Some(place)), sender)
     }
+
+    case PlaceMessage(place: Place) =>
+      if (Company.isValid(place)) postDataToApi("companies", Company.toJson(place), sender)
+      else sender ! Failure(new Throwable(s"Intercom company invalid: ${place.toString}"))
+
     case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
   }
 
   /**
+    * Post to the intercom api using WS play service
+    * @param endpoint: intercom endpoint users, companies, events...
+    * @param data: the json data formatted as they want
+    * @param sender: the actor ref for error handling
+    * @return
+    */
+  def postDataToApi(endpoint: String, data: JsObject, sender: ActorRef) = {
+    // Not used anymore as java lib not async
+    //handleIntercomResponse(User.createBasicIntercomUser(user, Some(List(place))), sender)
+
+    // Move this call in a proper helper if needed somewhere else
+    handleAsyncIntercomResponse(
+      Try(
+        WS.url(current.configuration.getString("intercom.apiurl").getOrElse("") + s"/$endpoint").
+          withAuth(
+            current.configuration.getString("intercom.appid").getOrElse(""),
+            current.configuration.getString("intercom.apikey").getOrElse(""),
+            WSAuthScheme.BASIC
+          ).
+          withRequestTimeout(5000).
+          withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json").
+          post(data)
+      ),
+      sender
+    )
+  }
+
+  /**
     * Just a handler for the Try of intercom interaction
- *
+    *
     * @param t: the Try result
     * @param sender: the actor sender ref
     * @tparam T: User, Company, Event...
@@ -67,6 +85,7 @@ class IntercomActor extends Actor {
 
   /**
     * Handler for intercom WS call
+    *
     * @param t: the Try result
     * @param sender: the actor sender ref
     * @return

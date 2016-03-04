@@ -38,13 +38,14 @@ object Company {
         "primary_cat_last_lvl",
         Category.getLastPrimaryOpt(company.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse("")
       )).
-      setRemoteCreatedAt(DateTime.parse(company.signupDate).getMillis / 1000).
+      setRemoteCreatedAt(company.signupDate.map(DateTime.parse(_).getMillis / 1000).getOrElse(0)).
       addCustomAttribute(CustomAttribute.newBooleanAttribute("verification_status", company.verificationStatus)).
       addCustomAttribute(CustomAttribute.newDoubleAttribute("completion_score", company.completionScore)).
       addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_actions_to_take", company.nbOfActionsToTake.getOrElse(0))).
       addCustomAttribute(CustomAttribute.newStringAttribute("distributor_name", company.attribution.flatMap(_.distribName).getOrElse(""))).
       addCustomAttribute(CustomAttribute.newLongAttribute("owner_user_id", company.attribution.flatMap(_.creatorCentralAppId).getOrElse(0))).
-      addCustomAttribute(CustomAttribute.newStringAttribute("owner_user_email", company.attribution.flatMap(_.creatorEmail).getOrElse("")))
+      addCustomAttribute(CustomAttribute.newStringAttribute("owner_user_email", company.attribution.flatMap(_.creatorEmail).getOrElse(""))).
+      setPlan(new IntercomCompany.Plan(company.plan.map(_.name).getOrElse("")))
 
   /**
     * Create a company at Intercom
@@ -77,8 +78,7 @@ object Company {
     */
   def toJson(company: Place) = Json.obj(
     "name" -> company.name,
-    "company_id" -> company.centralAppId.toString,
-    "remote_created_at" -> DateTime.parse(company.signupDate).getMillis / 1000,
+    "company_id" -> JsString("centralapp-" +company.centralAppId.toString),
     "custom_attributes" -> Json.obj(
       "place_id" -> company.centralAppId,
       "place_email" -> company.email,
@@ -101,6 +101,10 @@ object Company {
       "distributor_name" -> JsString(company.attribution.flatMap(_.distribName).getOrElse("")),
       "owner_user_id" -> company.attribution.flatMap(_.creatorCentralAppId).getOrElse(0).toString,
       "owner_user_email" -> JsString(company.attribution.flatMap(_.creatorEmail).getOrElse(""))
-    )
-  )
+    ),
+    "plan" -> JsString(company.plan.map(_.name).getOrElse(""))
+  ) ++ {
+    if (company.signupDate.isDefined) Json.obj("remote_created_at" -> DateTime.parse(company.signupDate.get).getMillis / 1000)
+    else Json.obj()
+  }
 }

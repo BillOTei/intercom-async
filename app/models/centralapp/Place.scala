@@ -19,12 +19,13 @@ case class Place(
                     mobilePhone: Option[String],
                     website: Option[String],
                     categories: Option[JsArray],
-                    signupDate: String,
+                    signupDate: Option[String],
                     verificationStatus: Boolean,
                     completionScore: Double,
                     nbOfActionsToTake: Option[Int],
                     billing: Option[PlaceBilling],
-                    attribution: Option[Attribution]
+                    attribution: Option[Attribution],
+                    plan: Option[Plan]
                   )
 
 object Place {
@@ -55,12 +56,13 @@ object Place {
       (JsPath \ "mobile" \ "international").readNullable[String] and
       (JsPath \ "website").readNullable[String] and
       (JsPath \ "categories").readNullable[JsArray] and
-      (JsPath \ "created").read[String] and
+      (JsPath \ "created").readNullable[String] and
       (JsPath \ "verified").read[Boolean] and
       (JsPath \ "completion_percent").read[Double] and
       (JsPath \ "nbOfActionsToTake").readNullable[Int] and
       (JsPath \ "billing").readNullable[PlaceBilling] and
-      (JsPath \ "attribution").readNullable[Attribution]
+      (JsPath \ "attribution").readNullable[Attribution] and
+      (JsPath \ "plan").readNullable[Plan]
       )(Place.apply _)
   }
 }

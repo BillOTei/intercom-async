@@ -32,7 +32,7 @@ object Category {
     * @return
     */
   def getPrimaryOpt(categories: JsArray): Option[JsObject] = categories.asOpt[List[JsObject]] match {
-    case Some(cats) => Some(cats.min)
+    case Some(cats) if cats.nonEmpty => Some(cats.min)
     case _ => None
   }
 
