@@ -10,6 +10,7 @@ case class User(
                  mobilePhone: Option[String],
                  email: String,
                  uiLang: String = "en",
+                 enabled: Boolean,
                  browserLang: Option[String],
                  attribution: Option[Attribution],
                  billingInfo: Option[UserBilling],
@@ -32,6 +33,7 @@ object User {
     (JsPath \ "phone").readNullable[String] and
     (JsPath \ "email").read[String] and
     (JsPath \ "language" \ "code").read[String] and
+    (JsPath \ "enabled").read[Boolean] and
     (JsPath \ "browserLang").readNullable[String] and
     (JsPath \ "attribution").readNullable[Attribution] and
     (JsPath \ "billingInfo").readNullable[UserBilling] and

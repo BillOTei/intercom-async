@@ -32,6 +32,7 @@ object User {
     addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_viewable_places", user.nbOfViewablePlaces.getOrElse(0))).
     addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_owned_places", user.nbOfOwnedPlaces.getOrElse(0))).
     addCustomAttribute(CustomAttribute.newLongAttribute("centralapp_id", user.centralAppId)).
+    addCustomAttribute(CustomAttribute.newBooleanAttribute("confirmed", user.enabled)).
     setCompanyCollection(new CompanyCollection(companies.getOrElse(List.empty).map(Company.getBasicIntercomCompany).asJava))
 
   /**
@@ -74,12 +75,13 @@ object User {
       "phone" -> JsString(user.mobilePhone.getOrElse("")),
       "interface_language" -> user.uiLang,
       "browser_language" -> JsString(user.browserLang.getOrElse("")),
-      "last_seen_date_db" -> new DateTime(user.lastSeenDate).toString("yyyy-MM-dd"),
+      "last_seen_date_db" -> new DateTime(user.lastSeenDate).getMillis / 1000,
       "nb_of_pending_places" -> Json.toJson(user.nbOfPendingPlaces.getOrElse(0)),
       "nb_of_managed_places" -> Json.toJson(user.nbOfManagedPlaces.getOrElse(0)),
       "nb_of_viewable_places" -> Json.toJson(user.nbOfViewablePlaces.getOrElse(0)),
       "nb_of_owned_places" -> Json.toJson(user.nbOfOwnedPlaces.getOrElse(0)),
-      "centralapp_id" -> user.centralAppId
+      "centralapp_id" -> user.centralAppId,
+      "confirmed" -> user.enabled
     )
   ) ++ {
     if (company.isDefined) Json.obj("companies" -> Json.arr(Company.toJson(company.get)))
