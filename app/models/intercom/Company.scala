@@ -78,7 +78,7 @@ object Company {
     */
   def toJson(company: Place) = Json.obj(
     "name" -> company.name,
-    "company_id" -> JsString("centralapp-" +company.centralAppId.toString),
+    "company_id" -> JsString(company.centralAppId.toString),
     "custom_attributes" -> Json.obj(
       "place_id" -> company.centralAppId,
       "place_email" -> company.email,
