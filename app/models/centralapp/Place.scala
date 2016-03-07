@@ -61,7 +61,11 @@ object Place {
       (JsPath \ "completion_percent").read[Double] and
       (JsPath \ "nbOfActionsToTake").readNullable[Int] and
       (JsPath \ "billing").readNullable[PlaceBilling] and
-      (JsPath \ "attribution").readNullable[Attribution] and
+      new Reads[Option[Attribution]] {
+        def reads(json: JsValue) = {
+          JsSuccess(Some(Attribution(None, None, (payload \ "user" \ "id").asOpt[Long], (payload \ "user" \ "email").asOpt[String])))
+        }
+      } and
       (JsPath \ "plan").readNullable[Plan]
       )(Place.apply _)
   }

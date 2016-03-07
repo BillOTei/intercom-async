@@ -76,10 +76,8 @@ object Company {
     * @param company: the intercom company, meaning a place for centralapp
     * @return
     */
-  def toJson(company: Place) = Json.obj(
-    "name" -> company.name,
-    "company_id" -> JsString(company.centralAppId.toString),
-    "custom_attributes" -> Json.obj(
+  def toJson(company: Place) = {
+    val customAttributes = Json.obj(
       "place_id" -> company.centralAppId,
       "place_email" -> company.email,
       "in_chain" -> company.chainName.isDefined,
@@ -89,7 +87,6 @@ object Company {
       "zip_code" -> company.zip,
       "full_address" -> JsString(company.address + " " + company.streetNumber),
       "default_language" -> JsString(company.defaultLang.getOrElse("")),
-      "opening_date" -> DateTime.parse(company.openingDates.get).getMillis / 1000,
       "primary_phone" -> JsString(company.landlinePhone.getOrElse("")),
       "mobile_phone" -> JsString(company.mobilePhone.getOrElse("")),
       "website" -> JsString(company.website.getOrElse("")),
@@ -98,13 +95,27 @@ object Company {
       "verification_status" -> company.verificationStatus,
       "completion_score" -> company.completionScore,
       "nb_of_actions_to_take" -> Json.toJson(company.nbOfActionsToTake.getOrElse(0)),
-      "distributor_name" -> JsString(company.attribution.flatMap(_.distribName).getOrElse("")),
-      "owner_user_id" -> company.attribution.flatMap(_.creatorCentralAppId).getOrElse(0).toString,
-      "owner_user_email" -> JsString(company.attribution.flatMap(_.creatorEmail).getOrElse(""))
-    ),
-    "plan" -> JsString(company.plan.map(_.name).getOrElse(""))
-  ) ++ {
-    if (company.signupDate.isDefined) Json.obj("remote_created_at" -> DateTime.parse(company.signupDate.get).getMillis / 1000)
-    else Json.obj()
+      "distributor_name" -> JsString(company.attribution.flatMap(_.distribName).getOrElse(""))
+    ) ++ {
+      if (company.attribution.exists(_.creatorCentralAppId.isDefined)) {
+        Json.obj(
+          "owner_user_id" -> company.attribution.flatMap(_.creatorCentralAppId).get.toString,
+          "owner_user_email" -> JsString(company.attribution.flatMap(_.creatorEmail).getOrElse(""))
+        )
+      } else Json.obj()
+    } ++ {
+      if (company.openingDates.isDefined) Json.obj("opening_date" -> DateTime.parse(company.openingDates.get).getMillis / 1000)
+      else Json.obj()
+    }
+
+    Json.obj(
+      "name" -> company.name,
+      "company_id" -> JsString(company.centralAppId.toString),
+      "custom_attributes" -> customAttributes,
+      "plan" -> JsString(company.plan.map(_.name).getOrElse(""))
+    ) ++ {
+      if (company.signupDate.isDefined) Json.obj("remote_created_at" -> DateTime.parse(company.signupDate.get).getMillis / 1000)
+      else Json.obj()
+    }
   }
 }

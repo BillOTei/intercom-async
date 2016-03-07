@@ -8,11 +8,11 @@ case class Attribution(
   distribRel: Option[String],
   creatorCentralAppId: Option[Long],
   creatorEmail: Option[String],
-  utmCampaign: Option[String],
-  utmTerm: Option[String],
-  utmMedium: Option[String],
-  utmSource: Option[String],
-  utmContent: Option[String]
+  utmCampaign: Option[String] = Some(""),
+  utmTerm: Option[String] = Some(""),
+  utmMedium: Option[String] = Some(""),
+  utmSource: Option[String] = Some(""),
+  utmContent: Option[String] = Some("")
 )
 
 object Attribution {
