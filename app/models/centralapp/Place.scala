@@ -51,7 +51,7 @@ object Place {
       (JsPath \ "location" \ "translated_addresses" \ lang \ "street_number").read[String].
         orElse((JsPath \ "location" \ "address" \ "street_number").read[String]) and
       (JsPath \ "defaultLang").readNullable[String] and
-      (JsPath \ "openingDates").readNullable[String] and
+      (JsPath \ "established").readNullable[String] and
       (JsPath \ "primary_phone" \ "international").readNullable[String] and
       (JsPath \ "mobile" \ "international").readNullable[String] and
       (JsPath \ "website").readNullable[String] and

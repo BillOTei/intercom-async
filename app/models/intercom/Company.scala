@@ -89,7 +89,7 @@ object Company {
       "zip_code" -> company.zip,
       "full_address" -> JsString(company.address + " " + company.streetNumber),
       "default_language" -> JsString(company.defaultLang.getOrElse("")),
-      "opening_date" -> JsString(company.openingDates.getOrElse("")),
+      "opening_date" -> DateTime.parse(company.openingDates.get).getMillis / 1000,
       "primary_phone" -> JsString(company.landlinePhone.getOrElse("")),
       "mobile_phone" -> JsString(company.mobilePhone.getOrElse("")),
       "website" -> JsString(company.website.getOrElse("")),
