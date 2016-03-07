@@ -79,7 +79,7 @@ class IntercomActor extends Actor {
     * @tparam T: User, Company, Event...
     */
   def handleIntercomResponse[T](t: Try[T], sender: ActorRef) = t match {
-    case Success(u) => sender ! Response(status = true, s"Intercom resource created: ${u.toString}")
+    case Success(u) => sender ! Response(status = true, s"Intercom resource upserted: ${u.toString}")
     case scala.util.Failure(e) => sender ! Failure(e)
   }
 
@@ -93,7 +93,7 @@ class IntercomActor extends Actor {
   def handleAsyncIntercomResponse(t: Try[Future[WSResponse]], sender: ActorRef) = t match {
     case Success(f) => f.map(
       response => {
-        if (response.status == 200) sender ! Response(status = true, s"Intercom resource created: ${response.json}")
+        if (response.status == 200) sender ! Response(status = true, s"Intercom resource upserted: ${response.json}")
         else sender ! Failure(new Throwable(response.json.toString))
       }
     )
