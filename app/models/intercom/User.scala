@@ -3,7 +3,7 @@ package models.intercom
 import io.intercom.api.{CompanyCollection, CustomAttribute, User => IntercomUser}
 import models.centralapp.{Place, User => CentralAppUser}
 import org.joda.time.DateTime
-import play.api.libs.json.{JsNumber, JsString, Json}
+import play.api.libs.json.{JsString, Json}
 
 import scala.collection.JavaConverters._
 import scala.util.Try

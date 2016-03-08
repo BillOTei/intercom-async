@@ -3,7 +3,7 @@ package models.intercom
 import io.intercom.api.{Company => IntercomCompany, CustomAttribute}
 import models.centralapp.{Category, Place}
 import org.joda.time.DateTime
-import play.api.libs.json.{JsNumber, JsString, Json}
+import play.api.libs.json.{JsString, Json}
 
 import scala.util.Try
 
