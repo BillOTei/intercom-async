@@ -56,8 +56,7 @@ class ForwardActor extends Actor {
           case e: JsError => Logger.error(s"Place invalid ${e.toString}")
         }
 
-        case _ =>
-          Logger.warn(s"Service ${msg.event} not implemented yet")
+        case _ => Logger.warn(s"Service ${msg.event} not implemented yet")
       }
   }
 }
