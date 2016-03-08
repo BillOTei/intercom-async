@@ -10,6 +10,7 @@ import scala.util.Try
 object Company {
   /**
     * Get the Intercom comapny obj
+    * to use with caution as it can erase data if pushed empty to intercom
     *
     * @param company: the company wrapper for us
     * @return
