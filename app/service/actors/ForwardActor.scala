@@ -8,7 +8,7 @@ import models.{Message, Response}
 import play.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.{JsError, JsSuccess}
-import service.actors.IntercomActor.{PlaceMessage, PlaceUserMessage}
+import service.actors.IntercomActor.{UserMessage, PlaceMessage, PlaceUserMessage}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -54,6 +54,16 @@ class ForwardActor extends Actor {
               case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
             }
           case e: JsError => Logger.error(s"Place invalid ${e.toString}")
+        }
+
+        case "user-creation" | "user-update" => (msg.payload \ "user").validate(User.userReads) match {
+          case u: JsSuccess[User] =>
+            Logger.info("Forwarding user-creation to intercom...")
+            (context.actorOf(IntercomActor.props) ? UserMessage(u.value)).mapTo[Response].onComplete {
+              case Success(response) => Logger.info(response.body)
+              case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+            }
+          case e: JsError => Logger.error(s"User invalid ${e.toString}")
         }
 
         case _ => Logger.warn(s"Service ${msg.event} not implemented yet")

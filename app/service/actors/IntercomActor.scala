@@ -18,10 +18,11 @@ object IntercomActor {
   case class PlaceUserMessage(user: CentralAppUser, place: Place)
 
   case class PlaceMessage(place: Place)
+
+  case class UserMessage(user: CentralAppUser)
 }
 
 // Todo add persistence system
-// Todo add controller access
 class IntercomActor extends Actor {
   import IntercomActor._
 
@@ -39,6 +40,10 @@ class IntercomActor extends Actor {
     case PlaceMessage(place: Place) =>
       if (Company.isValid(place)) postDataToApi("companies", Company.toJson(place), sender)
       else sender ! Failure(new Throwable(s"Intercom company invalid: ${place.toString}"))
+
+    case UserMessage(user: CentralAppUser) =>
+      if (User.isValid(user)) postDataToApi("users", User.toJson(user, None), sender)
+      else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
 
     case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
   }

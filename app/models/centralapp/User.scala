@@ -11,7 +11,7 @@ case class User(
                  email: String,
                  uiLang: String = "en",
                  enabled: Boolean,
-                 browserLang: Option[String],
+                 //browserLang: Option[String],
                  attribution: Option[Attribution],
                  billingInfo: Option[UserBilling],
                  signupDate: Long = System.currentTimeMillis,
@@ -34,7 +34,7 @@ object User {
     (JsPath \ "email").read[String] and
     (JsPath \ "language" \ "code").read[String] and
     (JsPath \ "enabled").read[Boolean] and
-    (JsPath \ "browserLang").readNullable[String] and
+    //(JsPath \ "browserLang").readNullable[String] and
     (JsPath \ "attribution").readNullable[Attribution] and
     (JsPath \ "billingInfo").readNullable[UserBilling] and
     (JsPath \ "created").read[Long] and
