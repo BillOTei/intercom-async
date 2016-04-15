@@ -20,6 +20,8 @@ object IntercomActor {
   case class PlaceMessage(place: Place)
 
   case class UserMessage(user: CentralAppUser)
+
+  case class EventMessage(name: String, user: CentralAppUser)
 }
 
 // Todo add persistence system

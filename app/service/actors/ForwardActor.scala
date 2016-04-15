@@ -66,6 +66,11 @@ class ForwardActor extends Actor {
           case e: JsError => Logger.error(s"User invalid ${e.toString}")
         }
 
+        case "user-login" =>
+          // See if we need a paypload for this event
+          Logger.info("Forwarding user-login to intercom...")
+
+
         case _ => Logger.warn(s"Service ${msg.event} not implemented yet")
       }
   }
