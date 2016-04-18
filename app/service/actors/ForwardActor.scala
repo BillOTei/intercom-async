@@ -8,7 +8,7 @@ import models.{Message, Response}
 import play.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.{JsError, JsSuccess}
-import service.actors.IntercomActor.{UserMessage, PlaceMessage, PlaceUserMessage}
+import service.actors.IntercomActor.{EventMessage, PlaceMessage, PlaceUserMessage, UserMessage}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -66,9 +66,23 @@ class ForwardActor extends Actor {
           case e: JsError => Logger.error(s"User invalid ${e.toString}")
         }
 
-        case "user-login" =>
-          // See if we need a paypload for this event
-          Logger.info("Forwarding user-login to intercom...")
+        case "user-login" | "verification-request" =>
+          // See if we need a paypload for this event or if it is possible to use only one case "event"
+          (msg.payload \ "user").validate(User.userReads) match {
+            case u: JsSuccess[User] =>
+              Logger.info(s"Forwarding ${msg.event} event to intercom...")
+              (context.actorOf(IntercomActor.props) ? EventMessage(
+                msg.event,
+                (msg.payload \ "created_at").asOpt[Long].getOrElse(System.currentTimeMillis / 1000),
+                u.value,
+                (msg.payload \ "place").asOpt(Place.placeReads(msg.payload)))).
+                mapTo[Response].onComplete {
+                  case Success(response) => Logger.info(response.body)
+                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+                }
+
+            case e: JsError => Logger.error(s"User invalid ${e.toString}")
+          }
 
 
         case _ => Logger.warn(s"Service ${msg.event} not implemented yet")

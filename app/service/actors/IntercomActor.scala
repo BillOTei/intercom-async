@@ -4,10 +4,11 @@ import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorRef, Props}
 import models.Response
 import models.centralapp.{Place, User => CentralAppUser}
-import models.intercom.{Company, User}
+import models.intercom.{Company, Event, User}
 import play.api.Play.current
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 import play.api.libs.ws._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Success, Try}
@@ -21,7 +22,7 @@ object IntercomActor {
 
   case class UserMessage(user: CentralAppUser)
 
-  case class EventMessage(name: String, user: CentralAppUser)
+  case class EventMessage(name: String, createdAt: Long, user: CentralAppUser, optPlace: Option[Place])
 }
 
 // Todo add persistence system
@@ -46,6 +47,15 @@ class IntercomActor extends Actor {
     case UserMessage(user: CentralAppUser) =>
       if (User.isValid(user)) postDataToApi("users", User.toJson(user, None), sender)
       else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
+
+    case EventMessage(name, createdAt, user, optPlace) =>
+      if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined) {
+        postDataToApi(
+          "events",
+          Json.toJson(Event(name, createdAt, user.email, user.centralAppId, optPlace.map(_.centralAppId))).as[JsObject],
+          sender
+        )
+      } else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
 
     case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
   }
@@ -101,6 +111,7 @@ class IntercomActor extends Actor {
     case Success(f) => f.map(
       response => {
         if (response.status == 200) sender ! Response(status = true, s"Intercom resource upserted: ${response.json}")
+        else if (response.status == 202) sender ! Response(status = true, s"Intercom resource accepted")
         else sender ! Failure(new Throwable(response.json.toString))
       }
     )
