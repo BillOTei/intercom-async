@@ -10,3 +10,4 @@ GET     /assets/*file               controllers.Assets.versioned(path="/public",
 
 # Event related routes
 POST    /event                      controllers.Application.event
+POST    /contact/user               controllers.ContactCtrl.userContact
