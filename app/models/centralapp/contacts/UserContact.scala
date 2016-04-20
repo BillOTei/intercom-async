@@ -5,7 +5,7 @@ import play.api.libs.json._
 
 case class UserContact(
                         userId: Long,
-                        token: String,
+                        token: Option[String],
                         subject: String,
                         message: Option[String],
                         whenToContact: Option[Long]
@@ -13,10 +13,11 @@ case class UserContact(
 
 object UserContact {
   val MSG_UNAUTHORIZED = "ERR.USER.UNAUTHORIZED"
+  val MSG_USER_INVALID = "ERR.USER.INVALID"
 
   implicit val jsonReads: Reads[UserContact] = (
     (JsPath \ "user_id").read[Long] and
-      (JsPath \ "token").read[String] and
+      (JsPath \ "token").readNullable[String] and
       (JsPath \ "subject").read[String] and
       (JsPath \ "message").readNullable[String] and
       (JsPath \ "when_to_contact").readNullable[Long]

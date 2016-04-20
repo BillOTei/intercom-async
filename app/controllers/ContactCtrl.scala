@@ -25,9 +25,21 @@ class ContactCtrl extends Controller {
     implicit request =>
       request.body.validate[UserContact].map {
         case uc: UserContact =>
-          HttpClient.get(current.configuration.getString("coreservice.user.url").getOrElse(""), "token" -> uc.token) match {
+          HttpClient.get(
+            current.configuration.getString("coreservice.user.url").getOrElse(""),
+            "token" -> uc.token.orElse(request.getQueryString("token")).getOrElse("")
+          ) match {
             case Success(f) => f.map(
-              response => Ok(response.json)
+              response =>
+                {
+                  for {
+                    userId <- (response.json \ "id").asOpt[Long]
+                    id <- Option(userId == uc.userId).filter(identity)
+                  } yield id
+                } match {
+                  case Some(id) => Ok(response.json)
+                  case _ => BadRequest(JsonError.stringError(UserContact.MSG_USER_INVALID))
+                }
             )
             case Failure(e) => Future(Unauthorized(JsonError.stringError(UserContact.MSG_UNAUTHORIZED)))
           }
