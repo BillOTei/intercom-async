@@ -1,0 +1,16 @@
+# --- Errors
+error.expected.date=ERR.FIELD_TYPE.DATE.INVALID
+error.expected.date.isoformat=ERR.FIELD_TYPE.DATE.FORMAT_INVALID
+error.expected.jodadate.format=ERR.FIELD_TYPE.DATE.INVALID
+error.expected.jsarray=ERR.FIELD_TYPE.ANY.ARRAY_EXPECTED
+error.expected.jsboolean=ERR.FIELD_TYPE.ANY.BOOLEAN_EXPECTED
+error.expected.jsnumber=ERR.FIELD_TYPE.ANY.NUMBER_EXPECTED
+error.expected.jsobject=ERR.FIELD_TYPE.ANY.OBJECT_EXPECTED
+error.expected.jsstring=ERR.FIELD_TYPE.ANY.STRING_EXPECTED
+error.expected.jsnumberorjsstring=ERR.FIELD_TYPE.ANY.STRING_OR_NUMBER_EXPECTED
+error.expected.keypathnode=ERR.FIELD_TYPE.ANY.NODE_EXPECTED
+error.expected.uuid=ERR.FIELD_TYPE.ANY.UUID_EXPECTED
+
+error.path.empty=ERR.FIELD_TYPE.ANY.PATH_EMPTY
+error.path.missing=ERR.FIELD_TYPE.ANY.PATH_MISSING
+error.path.result.multiple=ERR.FIELD_TYPE.ANY.PATH_RESULT_MULTIPLE

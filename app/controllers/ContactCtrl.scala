@@ -1,5 +1,6 @@
 package controllers
 
+import helpers.JsonError
 import models.Message
 import models.centralapp.contacts.UserContact
 import play.api.mvc._
@@ -20,7 +21,7 @@ class ContactCtrl extends Controller {
 
           Ok(uc.message)
       }.recoverTotal {
-        e => BadRequest("that's bad")
+        e => BadRequest(JsonError.jsErrors(e))
       }
     }
   }

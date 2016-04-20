@@ -4,6 +4,8 @@ import play.api.data.FormError
 import play.api.data.validation.ValidationError
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import play.api.Play.current
+import play.api.i18n.Messages.Implicits._
 
 import scala.language.postfixOps
 
