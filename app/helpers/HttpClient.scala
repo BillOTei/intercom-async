@@ -1,6 +1,7 @@
 package helpers
 
 import play.api.libs.ws.{WS, WSResponse}
+import play.api.Play.current
 
 import scala.concurrent.Future
 import scala.util.Try

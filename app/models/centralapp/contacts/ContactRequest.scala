@@ -2,6 +2,6 @@ package models.centralapp.contacts
 
 abstract class ContactRequest {
   def subject: String
-  def message: String
-  def whenToContact: Long
+  def message: Option[String]
+  def whenToContact: Option[Long]
 }

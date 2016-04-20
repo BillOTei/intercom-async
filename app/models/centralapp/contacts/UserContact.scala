@@ -12,6 +12,8 @@ case class UserContact(
                       ) extends ContactRequest
 
 object UserContact {
+  val MSG_UNAUTHORIZED = "ERR.USER.UNAUTHORIZED"
+
   implicit val jsonReads: Reads[UserContact] = (
     (JsPath \ "user_id").read[Long] and
       (JsPath \ "token").read[String] and
