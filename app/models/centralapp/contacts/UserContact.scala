@@ -7,8 +7,8 @@ case class UserContact(
                         userId: Long,
                         token: String,
                         subject: String,
-                        message: String,
-                        whenToContact: Long
+                        message: Option[String],
+                        whenToContact: Option[Long]
                       ) extends ContactRequest
 
 object UserContact {
@@ -16,7 +16,7 @@ object UserContact {
     (JsPath \ "user_id").read[Long] and
       (JsPath \ "token").read[String] and
       (JsPath \ "subject").read[String] and
-      (JsPath \ "message").read[String] and
-      (JsPath \ "when_to_contact").read[Long]
+      (JsPath \ "message").readNullable[String] and
+      (JsPath \ "when_to_contact").readNullable[Long]
     )(UserContact.apply _)
 }
