@@ -35,6 +35,15 @@ object JsonError {
     msg <- if (err._2.isEmpty) Seq(ValidationError(fallbackMsg)) else err._2
   } yield FormError(err._1.toJsonString, msg.message))
 
+  /**
+    * Outputs a global single msg error
+    *
+    * @param field The field in case we want a field error
+    * @param msg The msg error
+    * @return
+    */
+  def stringError(msg: String, field: String = ""): JsValue = getErrors(Seq(FormError(field, msg)))
+
   case class ErrorVal(name: String, value: String)
   implicit val errorValWrites = Json.writes[ErrorVal]
   val errorValNameValueWrites = new Writes[ErrorVal] {
