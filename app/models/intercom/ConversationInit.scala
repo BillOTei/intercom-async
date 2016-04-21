@@ -3,9 +3,9 @@ package models.intercom
 import play.api.libs.json._
 
 case class ConversationInit(
+    message: String,
     optUserEmail: Option[String],
-    optLeadId: Option[Long],
-    message: String
+    optLeadId: Option[Long] = None
 )
 
 object ConversationInit {

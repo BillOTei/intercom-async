@@ -3,12 +3,14 @@ package service.actors
 import akka.actor.{Actor, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import models.centralapp.contacts.UserContact
 import models.centralapp.{Place, User}
+import models.intercom.ConversationInit
 import models.{Message, Response}
 import play.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.{JsError, JsSuccess}
-import service.actors.IntercomActor.{EventMessage, PlaceMessage, PlaceUserMessage, UserMessage}
+import service.actors.IntercomActor._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -58,7 +60,7 @@ class ForwardActor extends Actor {
 
         case "user-creation" | "user-update" => (msg.payload \ "user").validate(User.userReads) match {
           case u: JsSuccess[User] =>
-            Logger.info("Forwarding user-creation to intercom...")
+            Logger.info(s"Forwarding ${msg.event} to intercom...")
             (context.actorOf(IntercomActor.props) ? UserMessage(u.value)).mapTo[Response].onComplete {
               case Success(response) => Logger.info(response.body)
               case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
@@ -84,6 +86,18 @@ class ForwardActor extends Actor {
             case e: JsError => Logger.error(s"User invalid ${e.toString}")
           }
 
+        case "user-contact" =>
+          msg.optPayloadObj match {
+            case Some(contactPayload) =>
+              // So far only intercom conversation contact
+              Logger.info(s"Forwarding ${msg.event} to intercom...")
+              (context.actorOf(IntercomActor.props) ? ConversationInitMessage(contactPayload.asInstanceOf[ConversationInit])).
+                mapTo[Response].onComplete {
+                  case Success(response) => Logger.info(response.body)
+                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+                }
+            case _ => Logger.error("UserContact payload invalid")
+          }
 
         case _ => Logger.warn(s"Service ${msg.event} not implemented yet")
       }

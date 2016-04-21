@@ -3,8 +3,9 @@ package service.actors
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorRef, Props}
 import models.Response
+import models.centralapp.contacts.UserContact
 import models.centralapp.{Place, User => CentralAppUser}
-import models.intercom.{Company, Event, User}
+import models.intercom.{Company, ConversationInit, Event, User}
 import play.api.Play.current
 import play.api.libs.json.{JsObject, Json}
 import play.api.libs.ws._
@@ -24,7 +25,7 @@ object IntercomActor {
 
   case class EventMessage(name: String, createdAt: Long, user: CentralAppUser, optPlace: Option[Place])
 
-  case class ConversationInitMessage(conversationInit: String)
+  case class ConversationInitMessage(conversationInit: ConversationInit)
 }
 
 // Todo add persistence system
@@ -58,6 +59,13 @@ class IntercomActor extends Actor {
           sender
         )
       } else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
+
+    case ConversationInitMessage(conversationInit) =>
+      postDataToApi(
+        "",
+        Json.toJson(conversationInit).as[JsObject],
+        sender
+      )
 
     case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
   }
