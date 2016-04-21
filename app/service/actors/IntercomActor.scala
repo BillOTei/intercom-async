@@ -23,6 +23,8 @@ object IntercomActor {
   case class UserMessage(user: CentralAppUser)
 
   case class EventMessage(name: String, createdAt: Long, user: CentralAppUser, optPlace: Option[Place])
+
+  case class ConversationInitMessage(conversationInit: String)
 }
 
 // Todo add persistence system
