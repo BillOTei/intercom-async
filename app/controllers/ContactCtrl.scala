@@ -31,10 +31,11 @@ class ContactCtrl extends Controller {
                 for {
                   userId <- (response.json \ "id").asOpt[Long]
                   id <- Option(userId == uc.userId).filter(identity)
-                } yield id
+                  userEmail <- (response.json \ "email").asOpt[String]
+                } yield userEmail
               } match {
-                case Some(id) =>
-                  UserContact.process(uc)
+                case Some(userEmail) =>
+                  UserContact.process(uc, userEmail)
                   Accepted
                 case _ => BadRequest(JsonError.stringError(UserContact.MSG_USER_INVALID))
               }
