@@ -40,10 +40,10 @@ class ContactCtrl extends Controller {
                 case _ => BadRequest(JsonError.stringError(UserContact.MSG_USER_INVALID))
               }
             ).recoverWith {
-              case _ => Future(BadRequest)
+              case _ => Future(InternalServerError) // Content useless here as this case recovers to Failure case below
             }
 
-            case Failure(e) => Future(Unauthorized(JsonError.stringError(UserContact.MSG_UNAUTHORIZED)))
+            case Failure(e) => Future(InternalServerError(JsonError.stringError(UserContact.MSG_UNAUTHORIZED)))
           }
       }.recoverTotal {
         e => Future(BadRequest(JsonError.jsErrors(e)))
