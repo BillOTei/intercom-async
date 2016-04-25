@@ -4,7 +4,7 @@ import akka.actor.{Actor, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import models.centralapp.contacts.UserContact
-import models.centralapp.{Place, User}
+import models.centralapp.{Place, SimplePlace, User}
 import models.intercom.ConversationInit
 import models.{Message, Response}
 import play.Logger
@@ -19,7 +19,7 @@ import scala.util.{Failure, Success}
 object ForwardActor {
   def props = Props[ForwardActor]
 
-  case class Forward(msg: Message)
+  case class Forward[T](msg: Message[T])
 }
 
 class ForwardActor extends Actor {
@@ -33,7 +33,7 @@ class ForwardActor extends Actor {
     * @return
     */
   def receive = {
-    case Forward(msg: Message) =>
+    case Forward(msg: Message[_]) =>
       msg.event match {
         case "placeuser-creation" => (msg.payload \ "user").validate(User.userReads) match {
           case u: JsSuccess[User] => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
@@ -50,13 +50,25 @@ class ForwardActor extends Actor {
 
         case "place-update" => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
           case p: JsSuccess[Place] =>
-            Logger.info("Forwarding place-update to intercom...")
+            Logger.info(s"Forwarding ${msg.event} to intercom...")
             (context.actorOf(IntercomActor.props) ? PlaceMessage(p.value)).mapTo[Response].onComplete {
               case Success(response) => Logger.info(response.body)
               case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
             }
           case e: JsError => Logger.error(s"Place invalid ${e.toString}")
         }
+
+        case "simple-place-creation" =>
+          msg.optPayloadObj match {
+            case Some(placePayload: SimplePlace) =>
+              Logger.info(s"Forwarding ${msg.event} to intercom...")
+              (context.actorOf(IntercomActor.props) ? SimplePlaceMessage(placePayload)).
+                mapTo[Response].onComplete {
+                case Success(response) => Logger.info(response.body)
+                case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+              }
+            case _ => Logger.error("Place payload invalid")
+          }
 
         case "user-creation" | "user-update" => (msg.payload \ "user").validate(User.userReads) match {
           case u: JsSuccess[User] =>
@@ -88,10 +100,10 @@ class ForwardActor extends Actor {
 
         case "user-contact" =>
           msg.optPayloadObj match {
-            case Some(contactPayload) =>
+            case Some(contactPayload: ConversationInit) =>
               // So far only intercom conversation contact
               Logger.info(s"Forwarding ${msg.event} to intercom...")
-              (context.actorOf(IntercomActor.props) ? ConversationInitMessage(contactPayload.asInstanceOf[ConversationInit])).
+              (context.actorOf(IntercomActor.props) ? ConversationInitMessage(contactPayload)).
                 mapTo[Response].onComplete {
                   case Success(response) => Logger.info(response.body)
                   case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")

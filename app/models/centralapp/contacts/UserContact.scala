@@ -1,6 +1,7 @@
 package models.centralapp.contacts
 
 import models.Message
+import models.centralapp.{Attribution, SimplePlace}
 import models.intercom.ConversationInit
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -34,9 +35,12 @@ object UserContact {
 
   def process(userContact: UserContact, userEmail: String) = {
     val system = Akka.system()
+    //userContact.businessName.map(
+
+    //)
     if (userContact.whenToContact.isDefined || userContact.message.isDefined) {
       system.actorOf(ForwardActor.props) ! Forward(
-        Message(
+        Message[ConversationInit](
           "user-contact",
           Json.obj(),
           Some(ConversationInit(userContact.subject + userContact.message.map(" - " + _).getOrElse(""), Some(userEmail)))
