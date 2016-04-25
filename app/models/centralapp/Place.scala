@@ -26,7 +26,7 @@ case class Place(
                     billing: Option[PlaceBilling],
                     attribution: Option[Attribution],
                     plan: Option[Plan]
-                  )
+                  ) extends SimplePlace
 
 object Place {
   def placeReads(payload: JsValue): Reads[Place] = {
