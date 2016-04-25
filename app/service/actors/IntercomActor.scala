@@ -125,7 +125,11 @@ class IntercomActor extends Actor {
         else if (response.status == 202) sender ! Response(status = true, s"Intercom resource accepted")
         else sender ! Failure(new Throwable(response.json.toString))
       }
-    )
+    ).recoverWith {
+      case e: Exception => Future.failed(new Throwable(e.getMessage))
+      case t: Throwable => Future.failed(t)
+      case _ => Future.failed(new Throwable("Intercom request failed for unknown reason"))
+    }
     case scala.util.Failure(e) => sender ! Failure(e)
   }
 }
