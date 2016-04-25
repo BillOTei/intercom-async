@@ -1,6 +1,6 @@
 package models.centralapp
 
-trait SimplePlace {
+trait BasicPlace {
   def name: String
   def attribution: Option[Attribution]
 }

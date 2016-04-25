@@ -4,7 +4,7 @@ import akka.actor.{Actor, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import models.centralapp.contacts.UserContact
-import models.centralapp.{Place, SimplePlace, User}
+import models.centralapp.{Place, BasicPlace, User}
 import models.intercom.ConversationInit
 import models.{Message, Response}
 import play.Logger
@@ -58,11 +58,11 @@ class ForwardActor extends Actor {
           case e: JsError => Logger.error(s"Place invalid ${e.toString}")
         }
 
-        case "simple-place-creation" =>
+        case "basic-placeuser-creation" =>
           msg.optPayloadObj match {
-            case Some(placePayload: SimplePlace) =>
+            case Some(placePayload: BasicPlace) =>
               Logger.info(s"Forwarding ${msg.event} to intercom...")
-              (context.actorOf(IntercomActor.props) ? SimplePlaceMessage(placePayload)).
+              (context.actorOf(IntercomActor.props) ? BasicPlaceUserMessage(placePayload)).
                 mapTo[Response].onComplete {
                 case Success(response) => Logger.info(response.body)
                 case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")

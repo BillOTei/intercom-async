@@ -17,7 +17,7 @@ case class UserContact(
                         message: Option[String],
                         whenToContact: Option[Long],
                         businessName: Option[String],
-                        city: Option[String]
+                        location: Option[String]
                       ) extends ContactRequest
 
 object UserContact {
@@ -31,7 +31,7 @@ object UserContact {
       (JsPath \ "message").readNullable[String] and
       (JsPath \ "when_to_contact").readNullable[Long] and
       (JsPath \ "business_name").readNullable[String] and
-      (JsPath \ "city").readNullable[String]
+      (JsPath \ "location").readNullable[String]
     )(UserContact.apply _)
 
   /**
@@ -41,9 +41,9 @@ object UserContact {
     */
   def process(userContact: UserContact, userEmail: String) = {
     val system = Akka.system()
-    //userContact.businessName.map(
+    /*userContact.businessName.map(
 
-    //)
+    )*/
     if (userContact.whenToContact.isDefined || userContact.message.isDefined) {
       system.actorOf(ForwardActor.props) ! Forward(
         Message[ConversationInit](

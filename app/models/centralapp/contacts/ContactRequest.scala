@@ -5,5 +5,5 @@ abstract class ContactRequest {
   def message: Option[String]
   def whenToContact: Option[Long]
   def businessName: Option[String]
-  def city: Option[String]
+  def location: Option[String]
 }

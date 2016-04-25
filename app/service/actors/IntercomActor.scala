@@ -3,7 +3,7 @@ package service.actors
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorRef, Props}
 import models.Response
-import models.centralapp.{Place, SimplePlace, User => CentralAppUser}
+import models.centralapp.{BasicPlace, BasicUser, Place, User => CentralAppUser}
 import models.intercom.{Company, ConversationInit, Event, User}
 import play.api.Play.current
 import play.api.libs.json.{JsObject, Json}
@@ -20,7 +20,7 @@ object IntercomActor {
 
   case class PlaceMessage(place: Place)
 
-  case class SimplePlaceMessage(place: SimplePlace)
+  case class BasicPlaceUserMessage(user: BasicUser, place: BasicPlace)
 
   case class UserMessage(user: CentralAppUser)
 
