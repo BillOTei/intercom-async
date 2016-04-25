@@ -3,6 +3,7 @@ package models.centralapp.contacts
 import models.Message
 import models.centralapp.{Attribution, SimplePlace}
 import models.intercom.ConversationInit
+import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.libs.Akka
@@ -33,6 +34,11 @@ object UserContact {
       (JsPath \ "city").readNullable[String]
     )(UserContact.apply _)
 
+  /**
+    * Method that processes a contact request coming from http client
+    * @param userContact: The parsed user contact data
+    * @param userEmail: the user email retrieved after token verification
+    */
   def process(userContact: UserContact, userEmail: String) = {
     val system = Akka.system()
     //userContact.businessName.map(
@@ -43,7 +49,12 @@ object UserContact {
         Message[ConversationInit](
           "user-contact",
           Json.obj(),
-          Some(ConversationInit(userContact.subject + userContact.message.map(" - " + _).getOrElse(""), Some(userEmail)))
+          Some(ConversationInit(
+            userContact.subject +
+              userContact.whenToContact.map(t => " - to be contacted: " + new DateTime(t * 1000).toString).getOrElse("") +
+              userContact.message.map(" - " + _).getOrElse(""),
+            Some(userEmail)
+          ))
         )
       )
     }
