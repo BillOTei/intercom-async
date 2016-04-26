@@ -3,9 +3,9 @@ package service.actors
 import akka.actor.{Actor, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import models.centralapp.users.User
-import models.centralapp.places.{BasicPlace, Place}
+import models.centralapp.places.Place
 import models.centralapp.relationships.BasicPlaceUser
+import models.centralapp.users.User
 import models.intercom.ConversationInit
 import models.{Message, Response}
 import play.Logger
@@ -21,9 +21,11 @@ object ForwardActor {
   def props = Props[ForwardActor]
 
   case class Forward[T](msg: Message[T])
+
 }
 
 class ForwardActor extends Actor {
+
   import ForwardActor._
 
   implicit val timeout = Timeout(10 seconds)
@@ -91,9 +93,9 @@ class ForwardActor extends Actor {
                 u.value,
                 (msg.payload \ "place").asOpt(Place.placeReads(msg.payload)))).
                 mapTo[Response].onComplete {
-                  case Success(response) => Logger.info(response.body)
-                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
-                }
+                case Success(response) => Logger.info(response.body)
+                case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+              }
 
             case e: JsError => Logger.error(s"User invalid ${e.toString}")
           }
@@ -105,9 +107,9 @@ class ForwardActor extends Actor {
               Logger.info(s"Forwarding ${msg.event} to intercom...")
               (context.actorOf(IntercomActor.props) ? ConversationInitMessage(contactPayload)).
                 mapTo[Response].onComplete {
-                  case Success(response) => Logger.info(response.body)
-                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
-                }
+                case Success(response) => Logger.info(response.body)
+                case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+              }
             case _ => Logger.error("UserContact payload invalid")
           }
 
