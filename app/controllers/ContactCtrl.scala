@@ -1,7 +1,7 @@
 package controllers
 
 import helpers.{HttpClient, JsonError}
-import models.centralapp.contacts.UserContact
+import models.centralapp.contacts.{LeadContact, UserContact}
 import play.api.Play._
 import play.api.mvc._
 import play.libs.Akka
@@ -84,6 +84,20 @@ class ContactCtrl extends Controller {
 
             case Failure(e) => Future(InternalServerError(JsonError.stringError(UserContact.MSG_UNAUTHORIZED)))
           }
+      }.recoverTotal {
+        e => Future(BadRequest(JsonError.jsErrors(e)))
+      }
+  }
+
+  /**
+    * The contact endpoint for lead users
+    * @return
+    */
+  def leadContact = Action.async(parse.json) {
+    implicit request =>
+      request.body.validate[LeadContact].map {
+        case lc: LeadContact =>
+          Future(Ok)
       }.recoverTotal {
         e => Future(BadRequest(JsonError.jsErrors(e)))
       }
