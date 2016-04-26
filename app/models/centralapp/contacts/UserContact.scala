@@ -1,7 +1,6 @@
 package models.centralapp.contacts
 
 import models.Message
-import models.centralapp.Attribution
 import models.centralapp.places.BasicPlace
 import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.BasicUser
