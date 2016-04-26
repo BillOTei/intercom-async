@@ -2,6 +2,7 @@ package models.intercom
 
 import io.intercom.api.{CompanyCollection, CustomAttribute, User => IntercomUser}
 import models.centralapp.places.Place
+import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.User
 import org.joda.time.DateTime
 import play.api.libs.json.{JsString, Json}
@@ -87,6 +88,22 @@ object User {
     )
   ) ++ {
     if (company.isDefined) Json.obj("companies" -> Json.arr(Company.toJson(company.get)))
+    else Json.obj()
+  }
+
+  def basicToJson(basicPlaceUser: BasicPlaceUser) = Json.obj(
+    "email" -> basicPlaceUser.user.email,
+    "companies" -> Json.arr(Company.basicToJson(basicPlaceUser))
+  ) ++ {
+    if (basicPlaceUser.user.optName.isDefined) Json.obj("name" -> basicPlaceUser.user.optName.get)
+    else Json.obj()
+  } ++ {
+    if (basicPlaceUser.user.optLang.isDefined) Json.obj(
+      "custom_attributes" -> Json.obj(
+        "interface_language" -> basicPlaceUser.user.optLang.get,
+        "phone" -> basicPlaceUser.user.optPhone.orNull
+      )
+    )
     else Json.obj()
   }
 }

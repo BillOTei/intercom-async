@@ -24,7 +24,7 @@ case class User(
                  nbOfViewablePlaces: Option[Int],
                  nbOfOwnedPlaces: Option[Int]/*,
                  places: Option[List[Place]]*/
-               )
+               ) extends BasicUser
 
 object User {
   implicit val userReads: Reads[User] = (

@@ -2,7 +2,8 @@ package models.intercom
 
 import io.intercom.api.{CustomAttribute, Company => IntercomCompany}
 import models.centralapp.Category
-import models.centralapp.places.Place
+import models.centralapp.places.{BasicPlace, Place}
+import models.centralapp.relationships.BasicPlaceUser
 import org.joda.time.DateTime
 import play.api.libs.json.{JsString, Json}
 
@@ -120,4 +121,15 @@ object Company {
       else Json.obj()
     }
   }
+
+  def basicToJson(basicPlaceUser: BasicPlaceUser) = Json.obj(
+    "name" -> basicPlaceUser.place.name,
+    //"company_id" -> JsString(company.centralAppId.toString),
+    "custom_attributes" -> {
+      Json.obj(
+        "locality" -> basicPlaceUser.place.locality,
+        "owner_user_email" -> JsString(basicPlaceUser.user.email)
+      )
+    }
+  )
 }

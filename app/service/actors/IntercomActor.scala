@@ -3,8 +3,9 @@ package service.actors
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorRef, Props}
 import models.Response
-import models.centralapp.users.{BasicUser, User => CentralAppUser}
-import models.centralapp.places.{BasicPlace, Place}
+import models.centralapp.places.Place
+import models.centralapp.relationships.BasicPlaceUser
+import models.centralapp.users.{User => CentralAppUser}
 import models.intercom.{Company, ConversationInit, Event, User}
 import play.api.Play.current
 import play.api.libs.json.{JsObject, Json}
@@ -21,7 +22,7 @@ object IntercomActor {
 
   case class PlaceMessage(place: Place)
 
-  case class BasicPlaceUserMessage(user: BasicUser, place: BasicPlace)
+  case class BasicPlaceUserMessage(placeUser: BasicPlaceUser)
 
   case class UserMessage(user: CentralAppUser)
 
@@ -68,6 +69,11 @@ class IntercomActor extends Actor {
         Json.toJson(conversationInit).as[JsObject],
         sender
       )
+
+    case BasicPlaceUserMessage(placeUser) =>
+      if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(placeUser.user.email).isDefined) {
+        postDataToApi("users", User.basicToJson(placeUser), sender)
+      } else sender ! Failure(new Throwable(s"Intercom basic user invalid: ${placeUser.user.toString}"))
 
     case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
   }

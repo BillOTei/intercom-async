@@ -5,6 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import models.centralapp.users.User
 import models.centralapp.places.{BasicPlace, Place}
+import models.centralapp.relationships.BasicPlaceUser
 import models.intercom.ConversationInit
 import models.{Message, Response}
 import play.Logger
@@ -58,17 +59,16 @@ class ForwardActor extends Actor {
           case e: JsError => Logger.error(s"Place invalid ${e.toString}")
         }
 
-        /*case "basic-placeuser-creation" =>
-          msg.optPayloadObj match {
-            case Some(placePayload: BasicPlace) =>
-              Logger.info(s"Forwarding ${msg.event} to intercom...")
-              (context.actorOf(IntercomActor.props) ? BasicPlaceUserMessage(placePayload)).
-                mapTo[Response].onComplete {
-                case Success(response) => Logger.info(response.body)
-                case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
-              }
-            case _ => Logger.error("Place payload invalid")
-          }*/
+        case "basic-placeuser-creation" => msg.optPayloadObj match {
+          case Some(placeUserPayload: BasicPlaceUser) =>
+            Logger.info(s"Forwarding ${msg.event} to intercom...")
+            (context.actorOf(IntercomActor.props) ? BasicPlaceUserMessage(placeUserPayload)).
+              mapTo[Response].onComplete {
+              case Success(response) => Logger.info(response.body)
+              case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+            }
+          case _ => Logger.error("BasicPlaceUser payload invalid")
+        }
 
         case "user-creation" | "user-update" => (msg.payload \ "user").validate(User.userReads) match {
           case u: JsSuccess[User] =>
