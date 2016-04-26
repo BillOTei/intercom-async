@@ -2,8 +2,10 @@ package models.centralapp.contacts
 
 import models.Message
 import models.centralapp.Attribution
+import models.centralapp.places.BasicPlace
+import models.centralapp.relationships.BasicPlaceUser
+import models.centralapp.users.BasicUser
 import models.intercom.ConversationInit
-import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.libs.Akka
@@ -15,7 +17,7 @@ case class UserContact(
                         token: Option[String],
                         subject: String,
                         message: Option[String],
-                        whenToContact: Option[Long],
+                        whenToContact: Option[String],
                         businessName: Option[String],
                         location: Option[String]
                       ) extends ContactRequest
@@ -29,7 +31,7 @@ object UserContact {
       (JsPath \ "token").readNullable[String] and
       (JsPath \ "subject").read[String] and
       (JsPath \ "message").readNullable[String] and
-      (JsPath \ "when_to_contact").readNullable[Long] and
+      (JsPath \ "when_to_contact").readNullable[String] and
       (JsPath \ "business_name").readNullable[String] and
       (JsPath \ "location").readNullable[String]
     )(UserContact.apply _)
@@ -41,9 +43,28 @@ object UserContact {
     */
   def process(userContact: UserContact, userEmail: String) = {
     val system = Akka.system()
-    /*userContact.businessName.map(
+    for {
+      placeName <- userContact.businessName
+      location <- userContact.location
+    } yield {
+      system.actorOf(ForwardActor.props) ! Forward(
+        Message[BasicPlaceUser](
+          "basic-placeuser-creation",
+          Json.obj(),
+          Some(BasicPlaceUser(
+            new BasicPlace {
+              override def name: String = placeName
+              override def locality: String = location
+              override def lead: Boolean = true
+            },
+            new BasicUser {
+              override def email: String = userEmail
+            }
+          ))
+        )
+      )
+    }
 
-    )*/
     if (userContact.whenToContact.isDefined || userContact.message.isDefined) {
       system.actorOf(ForwardActor.props) ! Forward(
         Message[ConversationInit](
@@ -51,7 +72,7 @@ object UserContact {
           Json.obj(),
           Some(ConversationInit(
             userContact.subject +
-              userContact.whenToContact.map(t => " - to be contacted: " + new DateTime(t * 1000).toString).getOrElse("") +
+              userContact.whenToContact.map(" - to be contacted: " + _).getOrElse("") +
               userContact.message.map(" - " + _).getOrElse(""),
             Some(userEmail)
           ))

@@ -123,9 +123,14 @@ object Company {
     }
   }
 
+  /**
+    * Gets a json for "lead" places mainly. I.E. the basic ones
+    * @param basicPlaceUser: the data
+    * @return
+    */
   def basicToJson(basicPlaceUser: BasicPlaceUser) = Json.obj(
     "name" -> basicPlaceUser.place.name,
-    "company_id" -> JsString("12445558"),
+    "company_id" -> JsString("notregistered_" + java.util.UUID.randomUUID.toString),
     "custom_attributes" -> Json.obj(
       "locality" -> basicPlaceUser.place.locality,
       "owner_user_email" -> JsString(basicPlaceUser.user.email),
