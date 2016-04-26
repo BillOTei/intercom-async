@@ -1,5 +1,6 @@
-package models.centralapp
+package models.centralapp.users
 
+import models.centralapp.Attribution
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 

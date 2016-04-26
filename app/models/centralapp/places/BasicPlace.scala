@@ -1,4 +1,6 @@
-package models.centralapp
+package models.centralapp.places
+
+import models.centralapp.Attribution
 
 trait BasicPlace {
   def name: String

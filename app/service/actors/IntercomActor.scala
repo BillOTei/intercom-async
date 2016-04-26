@@ -3,7 +3,8 @@ package service.actors
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorRef, Props}
 import models.Response
-import models.centralapp.{BasicPlace, BasicUser, Place, User => CentralAppUser}
+import models.centralapp.users.{BasicUser, User}
+import models.centralapp.places.{BasicPlace, Place}
 import models.intercom.{Company, ConversationInit, Event, User}
 import play.api.Play.current
 import play.api.libs.json.{JsObject, Json}
@@ -16,15 +17,15 @@ import scala.util.{Success, Try}
 object IntercomActor {
   def props = Props[IntercomActor]
 
-  case class PlaceUserMessage(user: CentralAppUser, place: Place)
+  case class PlaceUserMessage(user: User, place: Place)
 
   case class PlaceMessage(place: Place)
 
   case class BasicPlaceUserMessage(user: BasicUser, place: BasicPlace)
 
-  case class UserMessage(user: CentralAppUser)
+  case class UserMessage(user: User)
 
-  case class EventMessage(name: String, createdAt: Long, user: CentralAppUser, optPlace: Option[Place])
+  case class EventMessage(name: String, createdAt: Long, user: User, optPlace: Option[Place])
 
   case class ConversationInitMessage(conversationInit: ConversationInit)
 }
@@ -37,7 +38,7 @@ class IntercomActor extends Actor {
   io.intercom.api.Intercom.setAppID(current.configuration.getString("intercom.appid").getOrElse(""))
 
   def receive = {
-    case PlaceUserMessage(user: CentralAppUser, place: Place) => (User.isValid(user), Company.isValid(place)) match {
+    case PlaceUserMessage(user: User, place: Place) => (User.isValid(user), Company.isValid(place)) match {
       case (false, false) => sender ! Failure(new Throwable(s"Intercom user & company invalid: ${user.toString} ${place.toString}"))
       case (true, false) => sender ! Failure(new Throwable(s"Intercom company invalid: ${place.toString}"))
       case (false, true) => sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
@@ -48,7 +49,7 @@ class IntercomActor extends Actor {
       if (Company.isValid(place)) postDataToApi("companies", Company.toJson(place), sender)
       else sender ! Failure(new Throwable(s"Intercom company invalid: ${place.toString}"))
 
-    case UserMessage(user: CentralAppUser) =>
+    case UserMessage(user: User) =>
       if (User.isValid(user)) postDataToApi("users", User.toJson(user, None), sender)
       else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
 
@@ -73,6 +74,7 @@ class IntercomActor extends Actor {
 
   /**
     * Post to the intercom api using WS play service
+    *
     * @param endpoint: intercom endpoint users, companies, events...
     * @param data: the json data formatted as they want
     * @param sender: the actor ref for error handling

@@ -3,8 +3,8 @@ package service.actors
 import akka.actor.{Actor, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import models.centralapp.contacts.UserContact
-import models.centralapp.{Place, BasicPlace, User}
+import models.centralapp.users.User
+import models.centralapp.places.{BasicPlace, Place}
 import models.intercom.ConversationInit
 import models.{Message, Response}
 import play.Logger

@@ -1,7 +1,7 @@
 package models.centralapp.contacts
 
 import models.Message
-import models.centralapp.{Attribution, SimplePlace}
+import models.centralapp.Attribution
 import models.intercom.ConversationInit
 import org.joda.time.DateTime
 import play.api.libs.functional.syntax._

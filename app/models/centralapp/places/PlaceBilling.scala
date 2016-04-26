@@ -1,4 +1,4 @@
-package models.centralapp
+package models.centralapp.places
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._

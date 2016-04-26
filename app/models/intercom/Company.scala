@@ -1,7 +1,8 @@
 package models.intercom
 
-import io.intercom.api.{Company => IntercomCompany, CustomAttribute}
-import models.centralapp.{Category, Place}
+import io.intercom.api.{CustomAttribute, Company => IntercomCompany}
+import models.centralapp.Category
+import models.centralapp.places.Place
 import org.joda.time.DateTime
 import play.api.libs.json.{JsString, Json}
 

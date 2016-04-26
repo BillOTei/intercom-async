@@ -1,7 +1,8 @@
 package models.intercom
 
 import io.intercom.api.{CompanyCollection, CustomAttribute, User => IntercomUser}
-import models.centralapp.{Place, User => CentralAppUser}
+import models.centralapp.places.Place
+import models.centralapp.users.User
 import org.joda.time.DateTime
 import play.api.libs.json.{JsString, Json}
 
@@ -17,7 +18,7 @@ object User {
     * @param companies: the places list, could be as well embedded into the user but not atm to avoid mutability
     * @return
     */
-  def getBasicIntercomUser(user: CentralAppUser, companies: Option[List[Place]]): IntercomUser = new IntercomUser().
+  def getBasicIntercomUser(user: User, companies: Option[List[Place]]): IntercomUser = new IntercomUser().
     setName(user.firstName + " " + user.lastName).
     setEmail(user.email).
     addCustomAttribute(CustomAttribute.newStringAttribute("phone", user.mobilePhone.getOrElse(""))).
@@ -44,7 +45,7 @@ object User {
     * @param companies: the places list, could be as well embedded into the user but not atm to avoid mutability
     * @return
     */
-  def createBasicIntercomUser(user: CentralAppUser, companies: Option[List[Place]]): Try[IntercomUser] = Try(IntercomUser.create(getBasicIntercomUser(user, companies)))
+  def createBasicIntercomUser(user: User, companies: Option[List[Place]]): Try[IntercomUser] = Try(IntercomUser.create(getBasicIntercomUser(user, companies)))
 
   /**
     * Valid the user data
@@ -54,7 +55,7 @@ object User {
     * @param user: the user wrapper
     * @return
     */
-  def isValid(user: CentralAppUser): Boolean = {
+  def isValid(user: User): Boolean = {
     !user.firstName.isEmpty && !user.lastName.isEmpty && (user.mobilePhone.isEmpty || user.mobilePhone.get.startsWith("+")) &&
     """([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined
     //&& (user.places.isEmpty || user.places.get.map(Company.isValid).forall(_ == true))
@@ -63,11 +64,12 @@ object User {
 
   /**
     * The user to json for ws post service mainly
+    *
     * @param user: the user reference obj
     * @param company: the optional company i.e. place on centralapp to be added to intercom
     * @return
     */
-  def toJson(user: CentralAppUser, company: Option[Place]) = Json.obj(
+  def toJson(user: User, company: Option[Place]) = Json.obj(
     "name" -> (user.firstName + " " + user.lastName),
     "email" -> user.email,
     "signed_up_at" -> user.signupDate / 1000,
