@@ -23,12 +23,6 @@ class ContactCtrl extends Controller {
   Donc scénario 1 :
   Quand un mec s’inscrit —> Si jamais c’était déjà un lead ave qui tu as conversé , etc. Et il arrive en new user out of no-where baaaaahhh tu vas lui envoyer des message discordant —> Donc il faut matcher le lead correspondant
 
-  alext [12:57 PM]
-  cad dire des messages discordants ?
-
-  [12:57]
-  je capte pas
-
   vanderlindenjc [12:57 PM]
   Scénario 2 (moins important)
   Quand un lead nous contacte et qu’enfet c’est déjà un utilisateur existant —> Il faudrait ajouter sa demande à son historique pour qu’on puisse bien comprendre que c’est pas un mec nouveau out of no-where

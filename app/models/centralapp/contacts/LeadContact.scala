@@ -32,7 +32,7 @@ object LeadContact {
       (JsPath \ "name").read[String] and
       (JsPath \ "email").read[String](Reads.email) and
       (JsPath \ "phone").read[String] and
-      (JsPath \ "language").readNullable[String](Reads.minLength(2) or Reads.maxLength(2)) and
+      (JsPath \ "language").readNullable[String](Reads.minLength[String](2) keepAnd Reads.maxLength[String](2)) and
       (JsPath \ "business_name").readNullable[String] and
       (JsPath \ "location").readNullable[String]
     )(LeadContact.apply _)
