@@ -33,7 +33,7 @@ object JsonError {
   def jsErrors(errors: JsError, fallbackMsg: String = "ERR.FIELD_TYPE.ANY.INVALID"): JsValue = getErrors(for {
     err <- errors.errors
     msg <- if (err._2.isEmpty) Seq(ValidationError(fallbackMsg)) else err._2
-  } yield FormError(err._1.toJsonString, msg.message))
+  } yield FormError(err._1.toJsonString, msg.message, msg.args))
 
   /**
     * Outputs a global single msg error
