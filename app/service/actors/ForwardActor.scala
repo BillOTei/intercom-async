@@ -58,7 +58,7 @@ class ForwardActor extends Actor {
           case e: JsError => Logger.error(s"Place invalid ${e.toString}")
         }
 
-        case "basic-placeuser-creation" =>
+        /*case "basic-placeuser-creation" =>
           msg.optPayloadObj match {
             case Some(placePayload: BasicPlace) =>
               Logger.info(s"Forwarding ${msg.event} to intercom...")
@@ -68,7 +68,7 @@ class ForwardActor extends Actor {
                 case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
               }
             case _ => Logger.error("Place payload invalid")
-          }
+          }*/
 
         case "user-creation" | "user-update" => (msg.payload \ "user").validate(User.userReads) match {
           case u: JsSuccess[User] =>
