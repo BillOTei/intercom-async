@@ -98,7 +98,8 @@ object Company {
       "verification_status" -> company.verificationStatus,
       "completion_score" -> company.completionScore,
       "nb_of_actions_to_take" -> Json.toJson(company.nbOfActionsToTake.getOrElse(0)),
-      "distributor_name" -> JsString(company.attribution.flatMap(_.distribName).getOrElse(""))
+      "distributor_name" -> JsString(company.attribution.flatMap(_.distribName).getOrElse("")),
+      "lead" -> company.lead
     ) ++ {
       if (company.attribution.exists(_.creatorCentralAppId.isDefined)) {
         Json.obj(
@@ -124,12 +125,11 @@ object Company {
 
   def basicToJson(basicPlaceUser: BasicPlaceUser) = Json.obj(
     "name" -> basicPlaceUser.place.name,
-    //"company_id" -> JsString(company.centralAppId.toString),
-    "custom_attributes" -> {
-      Json.obj(
-        "locality" -> basicPlaceUser.place.locality,
-        "owner_user_email" -> JsString(basicPlaceUser.user.email)
-      )
-    }
+    "company_id" -> JsString("12445558"),
+    "custom_attributes" -> Json.obj(
+      "locality" -> basicPlaceUser.place.locality,
+      "owner_user_email" -> JsString(basicPlaceUser.user.email),
+      "lead" -> basicPlaceUser.place.lead
+    )
   )
 }
