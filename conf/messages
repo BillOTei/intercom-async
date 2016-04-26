@@ -14,3 +14,5 @@ error.expected.uuid=ERR.FIELD_TYPE.ANY.UUID_EXPECTED
 error.path.empty=ERR.FIELD_TYPE.ANY.PATH_EMPTY
 error.path.missing=ERR.FIELD_TYPE.ANY.PATH_MISSING
 error.path.result.multiple=ERR.FIELD_TYPE.ANY.PATH_RESULT_MULTIPLE
+
+error.email=ERR.FIELD_TYPE.EMAIL.INVALID
