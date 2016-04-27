@@ -40,6 +40,14 @@ object HttpClient {
     )
   }
 
+  def getFromIntercomApi(endpoint: String, params: (String, String)*) = {
+    handleIntercomResponse(
+      Try(
+        getAuthIntercomRequest(endpoint).withQueryString(params: _*).get
+      )
+    )
+  }
+
   /**
     * Gets the auth WS request to send to Intercom
     * @param endpoint: the endpoint uri

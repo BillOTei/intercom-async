@@ -91,7 +91,11 @@ class ContactCtrl extends Controller {
     implicit request =>
       request.body.validate[LeadContact].map {
         case lc: LeadContact =>
-          Future(Ok)
+          HttpClient.getFromIntercomApi("users", "email" -> "julien@getcentralapp.com").map {
+              case Success(json) => Ok(json)
+              case Failure(e) => BadRequest(e.getMessage)
+          }
+          //Future(Ok)
       }.recoverTotal {
         e => Future(BadRequest(JsonError.jsErrors(e)))
       }
