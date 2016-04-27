@@ -5,7 +5,7 @@ import akka.actor.Status.Failure
 import models.Response
 import play.api.libs.ws.{WS, WSAuthScheme, WSRequest, WSResponse}
 import play.api.Play.current
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.{JsNull, JsObject, JsValue}
 
 import scala.concurrent.Future
 import scala.util.{Success, Try}
@@ -78,6 +78,9 @@ object HttpClient {
           case 200 | 202 =>
             optSender.foreach(_ ! Response(status = true, s"Intercom resource ${response.statusText}: ${response.json}"))
             Success(response.json)
+          case 404 =>
+            optSender.foreach(_ ! Response(status = true, s"Intercom resource not found"))
+            Success(JsNull)
           case _ =>
             optSender.foreach(_ ! Failure(new Throwable(response.json.toString)))
             scala.util.Failure(new Throwable(response.json.toString))
