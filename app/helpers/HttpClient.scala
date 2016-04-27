@@ -3,9 +3,9 @@ package helpers
 import akka.actor.ActorRef
 import akka.actor.Status.Failure
 import models.Response
-import play.api.libs.ws.{WS, WSAuthScheme, WSResponse}
+import play.api.libs.ws.{WS, WSAuthScheme, WSRequest, WSResponse}
 import play.api.Play.current
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, JsValue}
 
 import scala.concurrent.Future
 import scala.util.{Success, Try}
@@ -32,41 +32,56 @@ object HttpClient {
     * @return
     */
   def postDataToIntercomApi(endpoint: String, data: JsObject, sender: ActorRef) = {
-    handleAsyncIntercomResponse(
+    handleIntercomResponse(
       Try(
-        WS.url(current.configuration.getString("intercom.apiurl").getOrElse("") + s"/$endpoint").
-          withAuth(
-            current.configuration.getString("intercom.appid").getOrElse(""),
-            current.configuration.getString("intercom.apikey").getOrElse(""),
-            WSAuthScheme.BASIC
-          ).
-          withRequestTimeout(5000).
-          withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json").
-          post(data)
+        getAuthIntercomRequest(endpoint).post(data)
       ),
-      sender
+      Some(sender)
     )
+  }
+
+  /**
+    * Gets the auth WS request to send to Intercom
+    * @param endpoint: the endpoint uri
+    * @return
+    */
+  private def getAuthIntercomRequest(endpoint: String): WSRequest = {
+    WS.url(current.configuration.getString("intercom.apiurl").getOrElse("") + s"/$endpoint").
+    withAuth(
+      current.configuration.getString("intercom.appid").getOrElse(""),
+      current.configuration.getString("intercom.apikey").getOrElse(""),
+      WSAuthScheme.BASIC
+    ).
+    withRequestTimeout(5000).
+    withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json")
   }
 
   /**
     * Handler for intercom WS call
     *
     * @param t: the Try result
-    * @param sender: the actor sender ref
+    * @param optSender: the optional actor sender ref, used is response not needed mainly
     * @return
     */
-  private def handleAsyncIntercomResponse(t: Try[Future[WSResponse]], sender: ActorRef) = t match {
-    case Success(f) => f.map(
-      response => {
-        if (response.status == 200) sender ! Response(status = true, s"Intercom resource upserted: ${response.json}")
-        else if (response.status == 202) sender ! Response(status = true, s"Intercom resource accepted")
-        else sender ! Failure(new Throwable(response.json.toString))
+  private def handleIntercomResponse(t: Try[Future[WSResponse]], optSender: Option[ActorRef] = None): Future[Try[JsValue]] = {
+    t match {
+      case Success(f) => f.map(
+        response => response.status match {
+          case 200 | 202 =>
+            optSender.foreach(_ ! Response(status = true, s"Intercom resource ${response.statusText}: ${response.json}"))
+            Success(response.json)
+          case _ =>
+            optSender.foreach(_ ! Failure(new Throwable(response.json.toString)))
+            scala.util.Failure(new Throwable(response.json.toString))
+        }
+      ).recoverWith {
+        case e: Exception => Future.failed(new Throwable(e.getMessage))
+        case t: Throwable => Future.failed(t)
+        case _ => Future.failed(new Throwable("Intercom request failed for unknown reason"))
       }
-    ).recoverWith {
-      case e: Exception => Future.failed(new Throwable(e.getMessage))
-      case t: Throwable => Future.failed(t)
-      case _ => Future.failed(new Throwable("Intercom request failed for unknown reason"))
+      case scala.util.Failure(e) =>
+        optSender.foreach(_ ! Failure(e))
+        Future.failed(new Throwable(e.getMessage))
     }
-    case scala.util.Failure(e) => sender ! Failure(e)
   }
 }
