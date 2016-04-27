@@ -45,4 +45,18 @@ object LeadContact {
     val system = Akka.system()
     
   }
+
+  /*def toUserContact(leadContact: LeadContact, intercomJsonUser: JsValue): UserContact = {
+    UserContact(
+
+    )
+    /*
+    * userId: Long,
+                        token: Option[String],
+                        subject: String,
+                        message: Option[String],
+                        whenToContact: Option[String],
+                        businessName: Option[String],
+                        location: Option[String]*/
+  }*/
 }

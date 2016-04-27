@@ -2,7 +2,9 @@ package controllers
 
 import helpers.{HttpClient, JsonError}
 import models.centralapp.contacts.{LeadContact, UserContact}
+import play.Logger
 import play.api.Play._
+import play.api.libs.json.JsNull
 import play.api.mvc._
 import play.libs.Akka
 
@@ -91,11 +93,30 @@ class ContactCtrl extends Controller {
     implicit request =>
       request.body.validate[LeadContact].map {
         case lc: LeadContact =>
-          HttpClient.getFromIntercomApi("users", "email" -> "julien@getcentralapp.com").map {
-              case Success(json) => Ok(json)
-              case Failure(e) => BadRequest(e.getMessage)
-          }
-          //Future(Ok)
+          // Checks to see whether the user already contacted us or not (users and leads)
+          // Not done atm
+          //HttpClient.getFromIntercomApi("users", "email" -> lc.email) map {
+          //  case Success(json) if json == JsNull =>
+              // No user found good, let's check leads now
+              HttpClient.getFromIntercomApi("contacts", "email" -> lc.email) map {
+                case Success(listJson) =>
+                case Failure(e) => InternalServerError(JsonError.stringError(e.getMessage))
+              }
+
+          /*  case Success(userJson) => Ok(userJson)
+              // User found so conversation and data go to him (and delete the potential leads)
+              (userJson \ "custom_attributes" \ "centralapp_id").asOpt[Long] match {
+                case Some(userId) =>
+                case _ =>
+                  // Nasty case
+                  Logger.error(s"Lead contact: intercom user found but no centralapp_id: ${lc.email}")
+                  BadRequest(JsonError.stringError(UserContact.MSG_USER_INVALID))
+              }
+
+            case Failure(e) => InternalServerError(JsonError.stringError(e.getMessage))
+          }*/
+
+          Future(Ok)
       }.recoverTotal {
         e => Future(BadRequest(JsonError.jsErrors(e)))
       }
