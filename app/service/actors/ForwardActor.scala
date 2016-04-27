@@ -113,6 +113,9 @@ class ForwardActor extends Actor {
             case _ => Logger.error("UserContact payload invalid")
           }
 
+        case "lead-contact" =>
+
+
         case _ => Logger.warn(s"Service ${msg.event} not implemented yet")
       }
   }
