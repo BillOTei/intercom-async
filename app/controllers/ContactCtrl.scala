@@ -95,15 +95,15 @@ class ContactCtrl extends Controller {
         case lc: LeadContact =>
           // Checks to see whether the user already contacted us or not (users and leads)
           // Not done atm
-          //HttpClient.getFromIntercomApi("users", "email" -> lc.email) map {
-          //  case Success(json) if json == JsNull =>
+          /*HttpClient.getFromIntercomApi("users", "email" -> lc.email) map {
+            case Success(json) if json == JsNull =>
               // No user found good, let's check leads now
               HttpClient.getFromIntercomApi("contacts", "email" -> lc.email) map {
                 case Success(listJson) =>
                 case Failure(e) => InternalServerError(JsonError.stringError(e.getMessage))
               }
 
-          /*  case Success(userJson) => Ok(userJson)
+            case Success(userJson) => Ok(userJson)
               // User found so conversation and data go to him (and delete the potential leads)
               (userJson \ "custom_attributes" \ "centralapp_id").asOpt[Long] match {
                 case Some(userId) =>
@@ -115,8 +115,8 @@ class ContactCtrl extends Controller {
 
             case Failure(e) => InternalServerError(JsonError.stringError(e.getMessage))
           }*/
-
-          Future(Ok)
+          LeadContact.process(lc)
+          Future(Accepted)
       }.recoverTotal {
         e => Future(BadRequest(JsonError.jsErrors(e)))
       }
