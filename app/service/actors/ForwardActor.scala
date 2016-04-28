@@ -15,12 +15,14 @@ import service.actors.IntercomActor._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 object ForwardActor {
   def props = Props[ForwardActor]
 
   case class Forward[T](msg: Message[T])
+
+  case class Answer(result: Try[Response])
 }
 
 class ForwardActor extends Actor {
@@ -99,7 +101,7 @@ class ForwardActor extends Actor {
             case e: JsError => Logger.error(s"User invalid ${e.toString}")
           }
 
-        case "user-contact" =>
+        case "user-contact" | "lead-contact" =>
           msg.optPayloadObj match {
             case Some(contactPayload: ConversationInit) =>
               // So far only intercom conversation contact
@@ -109,7 +111,7 @@ class ForwardActor extends Actor {
                 case Success(response) => Logger.info(response.body)
                 case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
               }
-            case _ => Logger.error("UserContact payload invalid")
+            case _ => Logger.error(s"${msg.event} payload invalid")
           }
 
         case "lead-creation" =>
@@ -135,5 +137,10 @@ class ForwardActor extends Actor {
 
         case _ => Logger.warn(s"Service ${msg.event} not implemented yet")
       }
+
+    case Answer(result) => result match {
+      case Success(resp) => Logger.info(resp.body)
+      case Failure(fail) => Logger.error(fail.getMessage)
+    }
   }
 }
