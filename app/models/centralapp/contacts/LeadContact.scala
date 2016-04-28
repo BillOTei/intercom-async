@@ -4,6 +4,7 @@ import models.Message
 import models.centralapp.places.BasicPlace
 import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.BasicUser
+import models.intercom.ConversationInit
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.libs.Akka
@@ -41,10 +42,26 @@ object LeadContact {
     *
     * @param leadContact: The parsed user contact data
     */
+   // Todo: ConversationInit is an Intercom related object, if the need of new service providers arises, this has to be moved on Intercom related classes to keep the service providers logic on the ForwardActor side
   def process(leadContact: LeadContact) = {
     val system = Akka.system()
 
-    if (leadContact.businessName.isDefined && leadContact.location.isDefined) {
+    if (leadContact.whenToContact.isDefined || leadContact.message.isDefined) {
+      system.actorOf(ForwardActor.props) ! Forward(
+        Message[ConversationInit](
+          "lead-contact",
+          Json.obj(),
+          Some(ConversationInit(
+            leadContact.subject +
+              leadContact.whenToContact.map(" - to be contacted: " + _).getOrElse("") +
+              leadContact.message.map(" - " + _).getOrElse(""),
+            None,
+            None,
+            Some(leadContact)
+          ))
+        )
+      )
+    } else if (leadContact.businessName.isDefined && leadContact.location.isDefined) {
       system.actorOf(ForwardActor.props) ! Forward(
         Message[BasicPlaceUser](
           "lead-creation",
@@ -55,12 +72,7 @@ object LeadContact {
               override def locality: String = leadContact.location.get
               override def lead: Boolean = true
             },
-            new BasicUser {
-              override def email: String = leadContact.email
-              override def optName: Option[String] = Some(leadContact.name)
-              override def optLang: Option[String] = leadContact.language
-              override def optPhone: Option[String] = Some(leadContact.phone)
-            }
+            getBasicUser(leadContact)
           ))
         )
       )
@@ -69,30 +81,23 @@ object LeadContact {
         Message[BasicUser](
           "lead-creation",
           Json.obj(),
-          Some(
-            new BasicUser {
-              override def email: String = leadContact.email
-              override def optName: Option[String] = Some(leadContact.name)
-              override def optLang: Option[String] = leadContact.language
-              override def optPhone: Option[String] = Some(leadContact.phone)
-            }
-          )
+          Some(getBasicUser(leadContact))
         )
       )
     }
   }
 
-  /*def toUserContact(leadContact: LeadContact, intercomJsonUser: JsValue): UserContact = {
-    UserContact(
-
-    )
-    /*
-    * userId: Long,
-                        token: Option[String],
-                        subject: String,
-                        message: Option[String],
-                        whenToContact: Option[String],
-                        businessName: Option[String],
-                        location: Option[String]*/
-  }*/
+  /**
+    * Gets a basic user trait from lead contact data
+    * @param leadContact: the data from the contact
+    * @return
+    */
+  def getBasicUser(leadContact: LeadContact): BasicUser = {
+    new BasicUser {
+      override def email: String = leadContact.email
+      override def optName: Option[String] = Some(leadContact.name)
+      override def optLang: Option[String] = leadContact.language
+      override def optPhone: Option[String] = Some(leadContact.phone)
+    }
+  }
 }

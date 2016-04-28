@@ -2,9 +2,7 @@ package controllers
 
 import helpers.{HttpClient, JsonError}
 import models.centralapp.contacts.{LeadContact, UserContact}
-import play.Logger
 import play.api.Play._
-import play.api.libs.json.JsNull
 import play.api.mvc._
 import play.libs.Akka
 

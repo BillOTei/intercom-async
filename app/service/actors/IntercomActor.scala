@@ -2,14 +2,17 @@ package service.actors
 
 import akka.actor.{Actor, Props}
 import helpers.HttpClient
-import models.centralapp.places.Place
+import models.centralapp.contacts.LeadContact
+import models.centralapp.places.{BasicPlace, Place}
 import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.{BasicUser, User => CentralAppUser}
 import models.intercom._
 import play.api.Play.current
 import play.api.libs.json.{JsObject, Json}
+import service.actors.ForwardActor.Answer
 
-import scala.util.Failure
+import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object IntercomActor {
   def props = Props[IntercomActor]
@@ -62,11 +65,46 @@ class IntercomActor extends Actor {
       } else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
 
     case ConversationInitMessage(conversationInit) =>
-      HttpClient.postDataToIntercomApi(
-        "messages",
-        Json.toJson(conversationInit).as[JsObject],
-        sender
-      )
+      // In the case of lead contact, need to create it before
+      // If there is a business name and location, we add the company data
+      // If not, just the user data
+      {
+        {
+          for {
+            leadContact <- conversationInit.optLeadContact
+            businessName <- leadContact.businessName
+            location <- leadContact.location
+          } yield HttpClient.postDataToIntercomApi(
+            "contacts",
+            Lead.toJson(
+              LeadContact.getBasicUser(leadContact),
+              Some(
+                BasicPlaceUser(
+                  new BasicPlace {
+                    override def name: String = businessName
+                    override def locality: String = location
+                    override def lead: Boolean = true
+                  },
+                  LeadContact.getBasicUser(leadContact)
+                )
+              )
+            ),
+            sender
+          )
+        } orElse {
+          conversationInit.optLeadContact.map(lc => HttpClient.postDataToIntercomApi("contacts", Lead.toJson(LeadContact.getBasicUser(lc), None), sender))
+        }
+      } map(
+        futureTry => futureTry.map {
+          case Success(leadJson) =>
+            HttpClient.postDataToIntercomApi(
+              "messages",
+              Json.toJson(conversationInit.copy(optLeadId = (leadJson \ "user_id").asOpt[String])).as[JsObject],
+              sender
+            )
+          case Failure(e) => sender ! Answer(Failure(e))
+        }
+      ) getOrElse HttpClient.postDataToIntercomApi("messages", Json.toJson(conversationInit).as[JsObject], sender)
 
     case BasicPlaceUserMessage(placeUser) =>
       if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(placeUser.user.email).isDefined) {
