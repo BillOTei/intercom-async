@@ -1,14 +1,15 @@
 package service.actors
 
-import akka.actor.Status.Failure
 import akka.actor.{Actor, Props}
 import helpers.HttpClient
 import models.centralapp.places.Place
 import models.centralapp.relationships.BasicPlaceUser
-import models.centralapp.users.{User => CentralAppUser}
-import models.intercom.{Company, ConversationInit, Event, User}
+import models.centralapp.users.{BasicUser, User => CentralAppUser}
+import models.intercom._
 import play.api.Play.current
 import play.api.libs.json.{JsObject, Json}
+
+import scala.util.Failure
 
 object IntercomActor {
   def props = Props[IntercomActor]
@@ -18,6 +19,8 @@ object IntercomActor {
   case class PlaceMessage(place: Place)
 
   case class BasicPlaceUserMessage(placeUser: BasicPlaceUser)
+
+  case class LeadMessage(user: BasicUser, optPlaceUser: Option[BasicPlaceUser] = None)
 
   case class UserMessage(user: CentralAppUser)
 
@@ -69,6 +72,11 @@ class IntercomActor extends Actor {
       if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(placeUser.user.email).isDefined) {
         HttpClient.postDataToIntercomApi("users", User.basicToJson(placeUser), sender)
       } else sender ! Failure(new Throwable(s"Intercom basic user invalid: ${placeUser.user.toString}"))
+
+    case LeadMessage(user, optPlaceUser) =>
+      if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined) {
+        HttpClient.postDataToIntercomApi("contacts", Lead.toJson(user, optPlaceUser), sender)
+      } else sender ! Failure(new Throwable(s"Intercom basic user invalid: ${user.toString}"))
 
     case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
   }

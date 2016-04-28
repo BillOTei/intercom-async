@@ -5,7 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import models.centralapp.places.Place
 import models.centralapp.relationships.BasicPlaceUser
-import models.centralapp.users.User
+import models.centralapp.users.{BasicUser, User}
 import models.intercom.ConversationInit
 import models.{Message, Response}
 import play.Logger
@@ -21,7 +21,6 @@ object ForwardActor {
   def props = Props[ForwardActor]
 
   case class Forward[T](msg: Message[T])
-
 }
 
 class ForwardActor extends Actor {
@@ -113,8 +112,26 @@ class ForwardActor extends Actor {
             case _ => Logger.error("UserContact payload invalid")
           }
 
-        case "lead-contact" =>
-
+        case "lead-creation" =>
+          msg.optPayloadObj match {
+            case Some(placeUserPayload: BasicPlaceUser) =>
+              // So far only intercom leads
+              Logger.info(s"Forwarding lead-creation with place to intercom...")
+              (context.actorOf(IntercomActor.props) ? LeadMessage(placeUserPayload.user, Some(placeUserPayload))).
+                mapTo[Response].onComplete {
+                case Success(response) => Logger.info(response.body)
+                case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+              }
+            case Some(userPayload: BasicUser) =>
+              // So far only intercom leads
+              Logger.info(s"Forwarding lead-creation to intercom...")
+              (context.actorOf(IntercomActor.props) ? LeadMessage(userPayload)).
+                mapTo[Response].onComplete {
+                case Success(response) => Logger.info(response.body)
+                case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+              }
+            case _ => Logger.error("lead-creation payload invalid")
+          }
 
         case _ => Logger.warn(s"Service ${msg.event} not implemented yet")
       }

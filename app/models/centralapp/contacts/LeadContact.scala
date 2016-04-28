@@ -4,7 +4,6 @@ import models.Message
 import models.centralapp.places.BasicPlace
 import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.BasicUser
-import models.intercom.ConversationInit
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.libs.Akka
@@ -39,11 +38,48 @@ object LeadContact {
 
   /**
     * Method that processes a contact request coming from http client
-    * @param LeadContact: The parsed user contact data
+    *
+    * @param leadContact: The parsed user contact data
     */
-  def process(LeadContact: LeadContact) = {
+  def process(leadContact: LeadContact) = {
     val system = Akka.system()
-    
+
+    if (leadContact.businessName.isDefined && leadContact.location.isDefined) {
+      system.actorOf(ForwardActor.props) ! Forward(
+        Message[BasicPlaceUser](
+          "lead-creation",
+          Json.obj(),
+          Some(BasicPlaceUser(
+            new BasicPlace {
+              override def name: String = leadContact.businessName.get
+              override def locality: String = leadContact.location.get
+              override def lead: Boolean = true
+            },
+            new BasicUser {
+              override def email: String = leadContact.email
+              override def optName: Option[String] = Some(leadContact.name)
+              override def optLang: Option[String] = leadContact.language
+              override def optPhone: Option[String] = Some(leadContact.phone)
+            }
+          ))
+        )
+      )
+    } else {
+      system.actorOf(ForwardActor.props) ! Forward(
+        Message[BasicUser](
+          "lead-creation",
+          Json.obj(),
+          Some(
+            new BasicUser {
+              override def email: String = leadContact.email
+              override def optName: Option[String] = Some(leadContact.name)
+              override def optLang: Option[String] = leadContact.language
+              override def optPhone: Option[String] = Some(leadContact.phone)
+            }
+          )
+        )
+      )
+    }
   }
 
   /*def toUserContact(leadContact: LeadContact, intercomJsonUser: JsValue): UserContact = {
