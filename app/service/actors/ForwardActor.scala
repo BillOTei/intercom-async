@@ -7,7 +7,7 @@ import models.centralapp.places.Place
 import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.{BasicUser, User}
 import models.intercom.ConversationInit
-import models.{Message, Response}
+import models.{Message, EventResponse}
 import play.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.{JsError, JsSuccess}
@@ -22,7 +22,7 @@ object ForwardActor {
 
   case class Forward[T](msg: Message[T])
 
-  case class Answer(result: Try[Response])
+  case class Answer(result: Try[EventResponse])
 }
 
 class ForwardActor extends Actor {
@@ -43,7 +43,7 @@ class ForwardActor extends Actor {
           case u: JsSuccess[User] => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
             case p: JsSuccess[Place] =>
               Logger.info("Forwarding placeuser-creation to intercom...")
-              (context.actorOf(IntercomActor.props) ? PlaceUserMessage(u.value, p.value)).mapTo[Response].onComplete {
+              (context.actorOf(IntercomActor.props) ? PlaceUserMessage(u.value, p.value)).mapTo[EventResponse].onComplete {
                 case Success(response) => Logger.info(response.body)
                 case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
               }
@@ -55,7 +55,7 @@ class ForwardActor extends Actor {
         case "place-update" => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
           case p: JsSuccess[Place] =>
             Logger.info(s"Forwarding ${msg.event} to intercom...")
-            (context.actorOf(IntercomActor.props) ? PlaceMessage(p.value)).mapTo[Response].onComplete {
+            (context.actorOf(IntercomActor.props) ? PlaceMessage(p.value)).mapTo[EventResponse].onComplete {
               case Success(response) => Logger.info(response.body)
               case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
             }
@@ -66,7 +66,7 @@ class ForwardActor extends Actor {
           case Some(placeUserPayload: BasicPlaceUser) =>
             Logger.info(s"Forwarding ${msg.event} to intercom...")
             (context.actorOf(IntercomActor.props) ? BasicPlaceUserMessage(placeUserPayload)).
-              mapTo[Response].onComplete {
+              mapTo[EventResponse].onComplete {
               case Success(response) => Logger.info(response.body)
               case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
             }
@@ -76,7 +76,7 @@ class ForwardActor extends Actor {
         case "user-creation" | "user-update" => (msg.payload \ "user").validate(User.userReads) match {
           case u: JsSuccess[User] =>
             Logger.info(s"Forwarding ${msg.event} to intercom...")
-            (context.actorOf(IntercomActor.props) ? UserMessage(u.value)).mapTo[Response].onComplete {
+            (context.actorOf(IntercomActor.props) ? UserMessage(u.value)).mapTo[EventResponse].onComplete {
               case Success(response) => Logger.info(response.body)
               case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
             }
@@ -93,7 +93,7 @@ class ForwardActor extends Actor {
                 (msg.payload \ "created_at").asOpt[Long].getOrElse(System.currentTimeMillis / 1000),
                 u.value,
                 (msg.payload \ "place").asOpt(Place.placeReads(msg.payload)))).
-                mapTo[Response].onComplete {
+                mapTo[EventResponse].onComplete {
                 case Success(response) => Logger.info(response.body)
                 case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
               }
@@ -107,7 +107,7 @@ class ForwardActor extends Actor {
               // So far only intercom conversation contact
               Logger.info(s"Forwarding ${msg.event} to intercom...")
               (context.actorOf(IntercomActor.props) ? ConversationInitMessage(contactPayload)).
-                mapTo[Response].onComplete {
+                mapTo[EventResponse].onComplete {
                 case Success(response) => Logger.info(response.body)
                 case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
               }
@@ -120,7 +120,7 @@ class ForwardActor extends Actor {
               // So far only intercom leads
               Logger.info(s"Forwarding lead-creation with place to intercom...")
               (context.actorOf(IntercomActor.props) ? LeadMessage(placeUserPayload.user, Some(placeUserPayload))).
-                mapTo[Response].onComplete {
+                mapTo[EventResponse].onComplete {
                 case Success(response) => Logger.info(response.body)
                 case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
               }
@@ -128,7 +128,7 @@ class ForwardActor extends Actor {
               // So far only intercom leads
               Logger.info(s"Forwarding lead-creation to intercom...")
               (context.actorOf(IntercomActor.props) ? LeadMessage(userPayload)).
-                mapTo[Response].onComplete {
+                mapTo[EventResponse].onComplete {
                 case Success(response) => Logger.info(response.body)
                 case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
               }
