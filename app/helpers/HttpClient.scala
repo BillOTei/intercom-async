@@ -2,10 +2,11 @@ package helpers
 
 import akka.actor.ActorRef
 import akka.actor.Status.Failure
-import models.Response
+import models.EventResponse
 import play.api.libs.ws.{WS, WSAuthScheme, WSRequest, WSResponse}
 import play.api.Play.current
 import play.api.libs.json.{JsNull, JsObject, JsValue}
+import service.actors.ForwardActor.Answer
 
 import scala.concurrent.Future
 import scala.util.{Success, Try}
@@ -15,6 +16,7 @@ object HttpClient {
 
   /**
     * Gets http response from url
+    *
     * @param url: the url to get from
     * @param params: the data to send
     * @return
@@ -50,6 +52,7 @@ object HttpClient {
 
   /**
     * Gets the auth WS request to send to Intercom
+    *
     * @param endpoint: the endpoint uri
     * @return
     */
@@ -71,15 +74,18 @@ object HttpClient {
     * @param optSender: the optional actor sender ref, used is response not needed mainly
     * @return
     */
-  private def handleIntercomResponse(t: Try[Future[WSResponse]], optSender: Option[ActorRef] = None): Future[Try[JsValue]] = {
+  private def handleIntercomResponse(
+                                      t: Try[Future[WSResponse]],
+                                      optSender: Option[ActorRef] = None
+                                      )(implicit needAnswer: Boolean = false): Future[Try[JsValue]] = {
     t match {
       case Success(f) => f.map(
         response => response.status match {
           case 200 | 202 =>
-            optSender.foreach(_ ! Response(status = true, s"Intercom resource ${response.statusText}: ${response.json}"))
+            optSender.foreach(_ ! EventResponse(status = true, s"Intercom resource ${response.statusText}: ${response.json}"))
             Success(response.json)
           case 404 =>
-            optSender.foreach(_ ! Response(status = true, s"Intercom resource not found"))
+            optSender.foreach(_ ! EventResponse(status = true, s"Intercom resource not found"))
             Success(JsNull)
           case _ =>
             optSender.foreach(_ ! Failure(new Throwable(response.json.toString)))
@@ -91,7 +97,9 @@ object HttpClient {
         case _ => Future.failed(new Throwable("Intercom request failed for unknown reason"))
       }
       case scala.util.Failure(e) =>
-        optSender.foreach(_ ! Failure(e))
+        optSender.foreach(
+          sender => if (!needAnswer) sender ! Failure(e) else sender ! Answer(scala.util.Failure(e))
+        )
         Future.failed(new Throwable(e.getMessage))
     }
   }

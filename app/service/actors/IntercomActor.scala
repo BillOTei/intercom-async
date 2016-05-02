@@ -97,8 +97,9 @@ class IntercomActor extends Actor {
       } map(
         futureTry => futureTry.map {
           case Success(leadJson) =>
+            implicit val needAnswer = true
             HttpClient.postDataToIntercomApi(
-              "messages",
+              "messges",
               Json.toJson(conversationInit.copy(optLeadId = (leadJson \ "user_id").asOpt[String])).as[JsObject],
               sender
             )
