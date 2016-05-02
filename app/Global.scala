@@ -9,6 +9,7 @@ object Global extends GlobalSettings {
   override def onStart(app: play.api.Application): Unit = {
     Logger.info("Centralapp Events Service starting")
 
-    Server.connect(ActorSystem("CentralappEvents"), "localhost", 2554)
+    // No stream anymore, http prefered
+    //Server.connectStream(ActorSystem("CentralappEvents"), "localhost", 2554)
   }
 }

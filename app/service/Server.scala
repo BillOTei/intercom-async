@@ -20,7 +20,7 @@ object Server {
     * @param address: server string attributed address
     * @param port: the address port
     */
-  def connect(system: ActorSystem, address: String, port: Int): Unit = {
+  def connectStream(system: ActorSystem, address: String, port: Int): Unit = {
     implicit val sys = system
     import system.dispatcher
     implicit val materializer = ActorMaterializer()
