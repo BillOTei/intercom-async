@@ -82,7 +82,12 @@ object HttpClient {
       case Success(f) => f.map(
         response => response.status match {
           case 200 | 202 =>
-            optSender.foreach(_ ! EventResponse(status = true, s"Intercom resource ${response.statusText}: ${response.json}"))
+            optSender.foreach(
+              _ ! EventResponse(
+                status = true,
+                s"Intercom resource ${response.statusText + Try(": " + response.json).getOrElse("")}"
+              )
+            )
             Success(response.json)
           case 404 =>
             optSender.foreach(_ ! EventResponse(status = true, s"Intercom resource not found"))
