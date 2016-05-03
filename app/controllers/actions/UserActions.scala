@@ -13,6 +13,9 @@ import scala.util.{Failure, Success, Try}
 
 object UserActions {
 
+  /**
+    * The user action for token authentication upon core
+    */
   object authenticatedAction extends ActionBuilder[AuthenticatedRequest] {
     override def invokeBlock[A](request: Request[A], block: (AuthenticatedRequest[A]) => Future[Result]): Future[Result] = {
       {
