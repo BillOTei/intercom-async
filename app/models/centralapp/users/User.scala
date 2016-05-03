@@ -15,8 +15,8 @@ case class User(
                  //browserLang: Option[String],
                  attribution: Option[Attribution],
                  billingInfo: Option[UserBilling],
-                 signupDate: Long = System.currentTimeMillis,
-                 lastSeenDate: Long = System.currentTimeMillis,
+                 signupDate: Option[Long] = Some(System.currentTimeMillis),
+                 lastSeenDate: Option[Long] = Some(System.currentTimeMillis),
                  lastContactedDate: Option[Long],
                  lastHeardFromDate: Option[Long],
                  nbOfPendingPlaces: Option[Int],
@@ -31,15 +31,15 @@ object User {
     (JsPath \ "id").read[Long] and
     (JsPath \ "firstname").read[String] and
     (JsPath \ "lastname").read[String] and
-    (JsPath \ "phone").readNullable[String] and
+    (JsPath \ "phone" \ "international").readNullable[String] and
     (JsPath \ "email").read[String] and
     (JsPath \ "language" \ "code").read[String] and
     (JsPath \ "enabled").read[Boolean] and
     //(JsPath \ "browserLang").readNullable[String] and
     (JsPath \ "attribution").readNullable[Attribution] and
     (JsPath \ "billingInfo").readNullable[UserBilling] and
-    (JsPath \ "created").read[Long] and
-    (JsPath \ "updated").read[Long] and
+    (JsPath \ "created").readNullable[Long] and
+    (JsPath \ "updated").readNullable[Long] and
     (JsPath \ "lastContactedDate").readNullable[Long] and
     (JsPath \ "lastHeardFromDate").readNullable[Long] and
     (JsPath \ "nbOfPendingPlaces").readNullable[Int] and
