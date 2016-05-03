@@ -8,6 +8,7 @@ import play.api.Play._
 import play.api.mvc._
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success, Try}
 
 object UserActions {

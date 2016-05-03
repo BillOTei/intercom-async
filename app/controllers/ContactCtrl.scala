@@ -1,14 +1,13 @@
 package controllers
 
-import helpers.{HttpClient, JsonError}
+import controllers.actions.UserActions.authenticatedAction
+import helpers.JsonError
 import models.centralapp.contacts.{LeadContact, UserContact}
-import play.api.Play._
 import play.api.mvc._
 import play.libs.Akka
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 class ContactCtrl extends Controller {
   val system = Akka.system()
@@ -51,33 +50,15 @@ class ContactCtrl extends Controller {
   [1:00]
   il aura l’air con… puis il va devoir retrouver les convers, etc.
   */
-  def userContact = Action.async(parse.json) {
+  def userContact = authenticatedAction.async(parse.json) {
     implicit request =>
       request.body.validate[UserContact].map {
         case uc: UserContact =>
-          HttpClient.get(
-            current.configuration.getString("coreservice.user.url").getOrElse(""),
-            "token" -> uc.token.orElse(request.getQueryString("token")).getOrElse("")
-          ) match {
-            case Success(f) => f.map(
-              response => {
-                for {
-                  userId <- (response.json \ "id").asOpt[Long]
-                  id <- Option(userId == uc.userId).filter(identity)
-                  userEmail <- (response.json \ "email").asOpt[String]
-                } yield userEmail
-              } match {
-                case Some(userEmail) =>
-                  UserContact.process(uc, userEmail)
-                  Accepted
-                case _ => BadRequest(JsonError.stringError(UserContact.MSG_USER_INVALID))
-              }
-            ).recoverWith {
-              case _ => Future(InternalServerError) // Content useless here as this case recovers to Failure case below
-            }
+          if (uc.userId == request.user.centralAppId) {
 
-            case Failure(e) => Future(InternalServerError(JsonError.stringError(UserContact.MSG_UNAUTHORIZED)))
-          }
+            UserContact.process(uc, request.user.email)
+            Future(Accepted)
+          } else Future(BadRequest(JsonError.stringError(UserContact.MSG_UNAUTHORIZED)))
       }.recoverTotal {
         e => Future(BadRequest(JsonError.jsErrors(e)))
       }
@@ -85,6 +66,7 @@ class ContactCtrl extends Controller {
 
   /**
     * The contact endpoint for lead users
+    *
     * @return
     */
   def leadContact = Action.async(parse.json) {
