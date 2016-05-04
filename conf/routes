@@ -8,6 +8,7 @@ GET     /                           controllers.Application.index
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
-# Event related routes
+# Event and contact related routes
 POST    /event                      controllers.Application.event
 POST    /contact/user               controllers.ContactCtrl.userContact
+POST    /contact/lead               controllers.ContactCtrl.leadContact

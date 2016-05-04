@@ -1,7 +1,9 @@
 package models.intercom
 
-import io.intercom.api.{Company => IntercomCompany, CustomAttribute}
-import models.centralapp.{Category, Place}
+import io.intercom.api.{CustomAttribute, Company => IntercomCompany}
+import models.centralapp.Category
+import models.centralapp.places.{BasicPlace, Place}
+import models.centralapp.relationships.BasicPlaceUser
 import org.joda.time.DateTime
 import play.api.libs.json.{JsString, Json}
 
@@ -96,7 +98,8 @@ object Company {
       "verification_status" -> company.verificationStatus,
       "completion_score" -> company.completionScore,
       "nb_of_actions_to_take" -> Json.toJson(company.nbOfActionsToTake.getOrElse(0)),
-      "distributor_name" -> JsString(company.attribution.flatMap(_.distribName).getOrElse(""))
+      "distributor_name" -> JsString(company.attribution.flatMap(_.distribName).getOrElse("")),
+      "lead" -> company.lead
     ) ++ {
       if (company.attribution.exists(_.creatorCentralAppId.isDefined)) {
         Json.obj(
@@ -119,4 +122,19 @@ object Company {
       else Json.obj()
     }
   }
+
+  /**
+    * Gets a json for "lead" places mainly. I.E. the basic ones
+    * @param basicPlaceUser: the data
+    * @return
+    */
+  def basicToJson(basicPlaceUser: BasicPlaceUser) = Json.obj(
+    "name" -> basicPlaceUser.place.name,
+    "company_id" -> JsString("notregistered_" + java.util.UUID.randomUUID.toString),
+    "custom_attributes" -> Json.obj(
+      "locality" -> basicPlaceUser.place.locality,
+      "owner_user_email" -> JsString(basicPlaceUser.user.email),
+      "lead" -> basicPlaceUser.place.lead
+    )
+  )
 }

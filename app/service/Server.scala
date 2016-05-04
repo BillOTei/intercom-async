@@ -20,7 +20,7 @@ object Server {
     * @param address: server string attributed address
     * @param port: the address port
     */
-  def connect(system: ActorSystem, address: String, port: Int): Unit = {
+  def connectStream(system: ActorSystem, address: String, port: Int): Unit = {
     implicit val sys = system
     import system.dispatcher
     implicit val materializer = ActorMaterializer()
@@ -60,7 +60,7 @@ object Server {
     Logger.info("Event server received message: " + stringMsg)
     // Forward the message to the appropriate actor, ask for the response
     Json.parse(stringMsg).validate(Message.messageReads) match {
-      case m: JsSuccess[Message] => system.actorOf(ForwardActor.props) ! Forward(m.value)
+      case m: JsSuccess[Message[Nothing]] => system.actorOf(ForwardActor.props) ! Forward(m.value)
       case e: JsError => Logger.error(s"Message invalid $stringMsg")
     }
     // Output the strmsg for bytestring conversion to respond to the publisher

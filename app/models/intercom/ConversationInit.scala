@@ -1,11 +1,13 @@
 package models.intercom
 
+import models.centralapp.contacts.LeadContact
 import play.api.libs.json._
 
 case class ConversationInit(
     message: String,
     optUserEmail: Option[String],
-    optLeadId: Option[Long] = None
+    optLeadId: Option[String] = None,
+    optLeadContact: Option[LeadContact] = None
 )
 
 object ConversationInit {
@@ -17,7 +19,7 @@ object ConversationInit {
               if (o.optLeadId.isDefined) {
                 Json.obj(
                   "type" -> "contact",
-                  "id" -> o.optLeadId.get
+                  "user_id" -> o.optLeadId.get
                 )
               } else if (o.optUserEmail.isDefined) {
                 Json.obj(

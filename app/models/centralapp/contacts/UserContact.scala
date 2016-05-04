@@ -1,6 +1,9 @@
 package models.centralapp.contacts
 
 import models.Message
+import models.centralapp.places.BasicPlace
+import models.centralapp.relationships.BasicPlaceUser
+import models.centralapp.users.BasicUser
 import models.intercom.ConversationInit
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -13,9 +16,9 @@ case class UserContact(
                         token: Option[String],
                         subject: String,
                         message: Option[String],
-                        whenToContact: Option[Long],
+                        whenToContact: Option[String],
                         businessName: Option[String],
-                        city: Option[String]
+                        location: Option[String]
                       ) extends ContactRequest
 
 object UserContact {
@@ -27,19 +30,51 @@ object UserContact {
       (JsPath \ "token").readNullable[String] and
       (JsPath \ "subject").read[String] and
       (JsPath \ "message").readNullable[String] and
-      (JsPath \ "when_to_contact").readNullable[Long] and
+      (JsPath \ "when_to_contact").readNullable[String] and
       (JsPath \ "business_name").readNullable[String] and
-      (JsPath \ "city").readNullable[String]
+      (JsPath \ "location").readNullable[String]
     )(UserContact.apply _)
 
+  /**
+    * Method that processes a contact request coming from http client
+    * @param userContact: The parsed user contact data
+    * @param userEmail: the user email retrieved after token verification
+    */
   def process(userContact: UserContact, userEmail: String) = {
     val system = Akka.system()
+    for {
+      placeName <- userContact.businessName
+      location <- userContact.location
+    } yield {
+      system.actorOf(ForwardActor.props) ! Forward(
+        Message[BasicPlaceUser](
+          "basic-placeuser-creation",
+          Json.obj(),
+          Some(BasicPlaceUser(
+            new BasicPlace {
+              override def name: String = placeName
+              override def locality: String = location
+              override def lead: Boolean = true
+            },
+            new BasicUser {
+              override def email: String = userEmail
+            }
+          ))
+        )
+      )
+    }
+
     if (userContact.whenToContact.isDefined || userContact.message.isDefined) {
       system.actorOf(ForwardActor.props) ! Forward(
-        Message(
+        Message[ConversationInit](
           "user-contact",
           Json.obj(),
-          Some(ConversationInit(userContact.subject + userContact.message.map(" - " + _).getOrElse(""), Some(userEmail)))
+          Some(ConversationInit(
+            userContact.subject +
+              userContact.whenToContact.map(" - to be contacted: " + _).getOrElse("") +
+              userContact.message.map(" - " + _).getOrElse(""),
+            Some(userEmail)
+          ))
         )
       )
     }

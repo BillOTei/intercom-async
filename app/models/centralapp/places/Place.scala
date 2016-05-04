@@ -1,5 +1,6 @@
-package models.centralapp
+package models.centralapp.places
 
+import models.centralapp.{Attribution, Plan}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -26,7 +27,7 @@ case class Place(
                     billing: Option[PlaceBilling],
                     attribution: Option[Attribution],
                     plan: Option[Plan]
-                  )
+                  ) extends BasicPlace
 
 object Place {
   def placeReads(payload: JsValue): Reads[Place] = {

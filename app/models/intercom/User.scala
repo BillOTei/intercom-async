@@ -1,7 +1,9 @@
 package models.intercom
 
 import io.intercom.api.{CompanyCollection, CustomAttribute, User => IntercomUser}
-import models.centralapp.{Place, User => CentralAppUser}
+import models.centralapp.places.Place
+import models.centralapp.relationships.BasicPlaceUser
+import models.centralapp.users.{User => CentralAppUser}
 import org.joda.time.DateTime
 import play.api.libs.json.{JsString, Json}
 
@@ -23,7 +25,7 @@ object User {
     addCustomAttribute(CustomAttribute.newStringAttribute("phone", user.mobilePhone.getOrElse(""))).
     addCustomAttribute(CustomAttribute.newStringAttribute("interface_language", user.uiLang)).
     //addCustomAttribute(CustomAttribute.newStringAttribute("browser_language", user.browserLang.getOrElse(""))).
-    setSignedUpAt(user.signupDate / 1000).
+    //setSignedUpAt(user.signupDate / 1000).
     //setLastRequestAt(user.lastSeenDate / 1000).
     //addCustomAttribute(CustomAttribute.newStringAttribute("signup_date_db", new DateTime(user.signupDate).toString("yyyy-MM-dd"))).
     addCustomAttribute(CustomAttribute.newStringAttribute("last_seen_date_db", new DateTime(user.lastSeenDate).toString("yyyy-MM-dd"))).
@@ -63,6 +65,7 @@ object User {
 
   /**
     * The user to json for ws post service mainly
+    *
     * @param user: the user reference obj
     * @param company: the optional company i.e. place on centralapp to be added to intercom
     * @return
@@ -70,12 +73,11 @@ object User {
   def toJson(user: CentralAppUser, company: Option[Place]) = Json.obj(
     "name" -> (user.firstName + " " + user.lastName),
     "email" -> user.email,
-    "signed_up_at" -> user.signupDate / 1000,
     "custom_attributes" -> Json.obj(
       "phone" -> JsString(user.mobilePhone.getOrElse("")),
       "interface_language" -> user.uiLang,
       //"browser_language" -> JsString(user.browserLang.getOrElse("")),
-      "last_seen_date_db" -> new DateTime(user.lastSeenDate).getMillis / 1000,
+      "last_seen_date_db" -> new DateTime(user.lastSeenDate.orNull).getMillis / 1000,
       "nb_of_pending_places" -> Json.toJson(user.nbOfPendingPlaces.getOrElse(0)),
       "nb_of_managed_places" -> Json.toJson(user.nbOfManagedPlaces.getOrElse(0)),
       "nb_of_viewable_places" -> Json.toJson(user.nbOfViewablePlaces.getOrElse(0)),
@@ -85,6 +87,31 @@ object User {
     )
   ) ++ {
     if (company.isDefined) Json.obj("companies" -> Json.arr(Company.toJson(company.get)))
+    else Json.obj()
+  } ++ {
+    if (user.signupDate.isDefined) Json.obj("signed_up_at" -> user.signupDate.get / 1000)
+    else Json.obj()
+  }
+
+  /**
+    * Gets a basic json to send to intercom. Used when a user contacts from
+    * front end
+    * @param basicPlaceUser: the data
+    * @return
+    */
+  def basicToJson(basicPlaceUser: BasicPlaceUser) = Json.obj(
+    "email" -> basicPlaceUser.user.email,
+    "companies" -> Json.arr(Company.basicToJson(basicPlaceUser))
+  ) ++ {
+    if (basicPlaceUser.user.optName.isDefined) Json.obj("name" -> basicPlaceUser.user.optName.get)
+    else Json.obj()
+  } ++ {
+    if (basicPlaceUser.user.optLang.isDefined) Json.obj(
+      "custom_attributes" -> Json.obj(
+        "interface_language" -> basicPlaceUser.user.optLang.get,
+        "phone" -> JsString(basicPlaceUser.user.optPhone.getOrElse(""))
+      )
+    )
     else Json.obj()
   }
 }
