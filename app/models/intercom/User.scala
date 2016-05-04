@@ -77,7 +77,7 @@ object User {
       "phone" -> JsString(user.mobilePhone.getOrElse("")),
       "interface_language" -> user.uiLang,
       //"browser_language" -> JsString(user.browserLang.getOrElse("")),
-      "last_seen_date_db" -> new DateTime(user.lastSeenDate).getMillis / 1000,
+      "last_seen_date_db" -> new DateTime(user.lastSeenDate.orNull).getMillis / 1000,
       "nb_of_pending_places" -> Json.toJson(user.nbOfPendingPlaces.getOrElse(0)),
       "nb_of_managed_places" -> Json.toJson(user.nbOfManagedPlaces.getOrElse(0)),
       "nb_of_viewable_places" -> Json.toJson(user.nbOfViewablePlaces.getOrElse(0)),
