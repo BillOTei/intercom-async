@@ -28,7 +28,7 @@ object User {
     //setSignedUpAt(user.signupDate / 1000).
     //setLastRequestAt(user.lastSeenDate / 1000).
     //addCustomAttribute(CustomAttribute.newStringAttribute("signup_date_db", new DateTime(user.signupDate).toString("yyyy-MM-dd"))).
-    addCustomAttribute(CustomAttribute.newStringAttribute("last_seen_date_db", new DateTime(user.lastSeenDate).toString("yyyy-MM-dd"))).
+    //addCustomAttribute(CustomAttribute.newStringAttribute("last_seen_date_db", new DateTime(user.lastSeenDate).toString("yyyy-MM-dd"))).
     addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_pending_places", user.nbOfPendingPlaces.getOrElse(0))).
     addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_managed_places", user.nbOfManagedPlaces.getOrElse(0))).
     addCustomAttribute(CustomAttribute.newIntegerAttribute("nb_of_viewable_places", user.nbOfViewablePlaces.getOrElse(0))).
@@ -77,7 +77,6 @@ object User {
       "phone" -> JsString(user.mobilePhone.getOrElse("")),
       "interface_language" -> user.uiLang,
       //"browser_language" -> JsString(user.browserLang.getOrElse("")),
-      "last_seen_date_db" -> new DateTime(user.lastSeenDate.orNull).getMillis / 1000,
       "nb_of_pending_places" -> Json.toJson(user.nbOfPendingPlaces.getOrElse(0)),
       "nb_of_managed_places" -> Json.toJson(user.nbOfManagedPlaces.getOrElse(0)),
       "nb_of_viewable_places" -> Json.toJson(user.nbOfViewablePlaces.getOrElse(0)),
@@ -89,8 +88,11 @@ object User {
     if (company.isDefined) Json.obj("companies" -> Json.arr(Company.toJson(company.get)))
     else Json.obj()
   } ++ {
-    if (user.signupDate.isDefined) Json.obj("signed_up_at" -> user.signupDate.get / 1000)
+    if (user.signupDate.isDefined) Json.obj("signed_up_at" -> new DateTime(user.signupDate.get).getMillis / 1000)
     else Json.obj()
+  } ++ {
+    if (user.lastSeenDate.isDefined) Json.obj("last_seen_date_db" -> new DateTime(user.lastSeenDate.get).getMillis / 1000)
+    else Json.obj("last_seen_date_db" -> new DateTime().getMillis / 1000)
   }
 
   /**
