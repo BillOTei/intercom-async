@@ -1,9 +1,9 @@
 package models.centralapp.contacts
 
 import models.Message
+import models.centralapp.BasicUser
 import models.centralapp.places.BasicPlace
 import models.centralapp.relationships.BasicPlaceUser
-import models.centralapp.users.BasicUser
 import models.intercom.ConversationInit
 import play.api.libs.functional.syntax._
 import play.api.libs.json._

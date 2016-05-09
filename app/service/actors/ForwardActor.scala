@@ -3,11 +3,12 @@ package service.actors
 import akka.actor.{Actor, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import models.centralapp.BasicUser
 import models.centralapp.places.Place
 import models.centralapp.relationships.BasicPlaceUser
-import models.centralapp.users.{BasicUser, User}
+import models.centralapp.users.User
 import models.intercom.ConversationInit
-import models.{Message, EventResponse}
+import models.{EventResponse, Message}
 import play.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.{JsError, JsSuccess}

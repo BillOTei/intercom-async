@@ -2,10 +2,11 @@ package service.actors
 
 import akka.actor.{Actor, Props}
 import helpers.HttpClient
+import models.centralapp.BasicUser
 import models.centralapp.contacts.LeadContact
 import models.centralapp.places.{BasicPlace, Place}
 import models.centralapp.relationships.BasicPlaceUser
-import models.centralapp.users.{BasicUser, User => CentralAppUser}
+import models.centralapp.users.{User => CentralAppUser}
 import models.intercom._
 import play.api.Play.current
 import play.api.libs.json.{JsObject, Json}
