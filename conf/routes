@@ -11,6 +11,7 @@ GET     /assets/*file                controllers.Assets.versioned(path="/public"
 # API DOC
 GET     /doc/all                     controllers.ApiHelpController.getResources
 GET     /doc/event                   controllers.ApiHelpController.getResource(path="/event")
+GET     /doc/contact                 controllers.ApiHelpController.getResource(path="/contact")
 
 # Event and contact related routes
 POST    /event/add                   @controllers.EventCtrl.add
