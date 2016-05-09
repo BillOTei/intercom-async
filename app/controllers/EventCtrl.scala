@@ -38,7 +38,7 @@ class EventCtrl extends Controller {
   @ApiResponses(
     Array(
       new ApiResponse(code = 200, message = ""),
-      new ApiResponse(code = 400, message = "")
+      new ApiResponse(code = 400, message = "Multiple possible formatted msgs, cf core json parsing doc.")
     )
   )
   /**
