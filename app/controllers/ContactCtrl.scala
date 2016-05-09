@@ -14,7 +14,6 @@ import scala.concurrent.Future
 class ContactCtrl extends Controller {
   val system = Akka.system()
 
-
   @ApiOperation(
     value = "Endpoint to receive a contact request from authenticated user",
     notes = "Only auth users with core token can use this endpoint. Logic heavily relies on Intercom conversations endpoints" +
