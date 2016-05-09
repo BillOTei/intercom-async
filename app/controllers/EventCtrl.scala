@@ -17,7 +17,7 @@ class EventCtrl extends Controller {
 
   @ApiOperation(
     value = "Endpoint to receive event messages from http requests",
-    notes = "Receives an event from any service and forward it (if accepted) to any implemented" +
+    notes = "Receives an event from any service and forward it (if accepted) to any implemented  " +
       "tier service (intercom being the only one as of 05/2016). So far events accepted/forwarded are: " +
       "user creation (user-creation) with user obj as payload / " +
       "user update (user-update) with user obj as payload / " +
