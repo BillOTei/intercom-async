@@ -40,6 +40,7 @@ class ForwardActor extends Actor {
   def receive = {
     case Forward(msg: Message[_]) =>
       msg.event match {
+        // When a user creates a place
         case "placeuser-creation" => (msg.payload \ "user").validate(User.userReads) match {
           case u: JsSuccess[User] => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
             case p: JsSuccess[Place] =>
@@ -53,6 +54,7 @@ class ForwardActor extends Actor {
           case e: JsError => Logger.error(s"User invalid ${e.toString}")
         }
 
+        // On place update
         case "place-update" => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
           case p: JsSuccess[Place] =>
             Logger.info(s"Forwarding ${msg.event} to intercom...")
@@ -63,6 +65,7 @@ class ForwardActor extends Actor {
           case e: JsError => Logger.error(s"Place invalid ${e.toString}")
         }
 
+        // When a user reaches us with place data that we don't already have in CentralApp
         case "basic-placeuser-creation" => msg.optPayloadObj match {
           case Some(placeUserPayload: BasicPlaceUser) =>
             Logger.info(s"Forwarding ${msg.event} to intercom...")
@@ -74,6 +77,7 @@ class ForwardActor extends Actor {
           case _ => Logger.error("BasicPlaceUser payload invalid")
         }
 
+        // On user creation or update
         case "user-creation" | "user-update" => (msg.payload \ "user").validate(User.userReads) match {
           case u: JsSuccess[User] =>
             Logger.info(s"Forwarding ${msg.event} to intercom...")
@@ -84,6 +88,7 @@ class ForwardActor extends Actor {
           case e: JsError => Logger.error(s"User invalid ${e.toString}")
         }
 
+        // On user login or when he asks for place verification
         case "user-login" | "verification-request" =>
           // See if we need a paypload for this event or if it is possible to use only one case "event"
           (msg.payload \ "user").validate(User.userReads) match {
@@ -102,6 +107,7 @@ class ForwardActor extends Actor {
             case e: JsError => Logger.error(s"User invalid ${e.toString}")
           }
 
+        // On user or lead contact
         case "user-contact" | "lead-contact" =>
           msg.optPayloadObj match {
             case Some(contactPayload: ConversationInit) =>
@@ -115,6 +121,7 @@ class ForwardActor extends Actor {
             case _ => Logger.error(s"${msg.event} payload invalid")
           }
 
+        // On lead creation/contact with or without place data
         case "lead-creation" =>
           msg.optPayloadObj match {
             case Some(placeUserPayload: BasicPlaceUser) =>
@@ -135,6 +142,11 @@ class ForwardActor extends Actor {
               }
             case _ => Logger.error("lead-creation payload invalid")
           }
+
+        // When a user tried to reach us (with whatever data and mainly through contact form), we store that
+        // with that event
+        case "user-reach" =>
+
 
         case _ => Logger.warn(s"Service ${msg.event} not implemented yet")
       }
