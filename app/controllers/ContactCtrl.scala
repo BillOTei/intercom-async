@@ -14,14 +14,13 @@ import scala.concurrent.Future
 class ContactCtrl extends Controller {
   val system = Akka.system()
 
-
   @ApiOperation(
     value = "Endpoint to receive a contact request from authenticated user",
-    notes = "Only auth users with core token can use this endpoint. Logic heavily relies on Intercom conversations endpoints" +
-      " as it is the only service used atm. Users are upserted " +
-      "and companies are created if name and location parameters are present. " +
-      "Conversation is initiated only if message or when to contact are present. Tag is created on the user" +
-      "with subject.",
+    notes = """Only auth users with core token can use this endpoint. Logic heavily relies on Intercom conversations endpoints
+      as it is the only service used atm. Users are upserted
+      and companies are created if name and location parameters are present.
+      Conversation is initiated only if message or when to contact are present. Tag is created on the user
+      with subject.""",
     response = classOf[Result],
     httpMethod = "POST",
     nickname = "user contact forwarding endpoint"
@@ -45,11 +44,6 @@ class ContactCtrl extends Controller {
       new ApiResponse(code = 401, message = "ERR.USER.UNAUTHORIZED")
     )
   )
-  /**
-    * The contact endpoint for authenticated users
-    *
-    * @return
-    */
   def userContact = authenticatedAction.async(parse.json) {
     implicit request =>
       request.body.validate[UserContact].map {
@@ -66,11 +60,11 @@ class ContactCtrl extends Controller {
 
   @ApiOperation(
     value = "Endpoint to receive a contact request from non authenticated user",
-    notes = "Only logged out users can use this endpoint. Logic heavily relies on Intercom conversations endpoints" +
-      " as it is the only service used atm. Users also called Leads are created on each request " +
-      "and companies are created if name and location parameters are present. " +
-      "Conversation is initiated only if message or when to contact are present. Tag is created on the lead user" +
-      "with subject.",
+    notes = """Only logged out users can use this endpoint. Logic heavily relies on Intercom conversations endpoints
+      as it is the only service used atm. Users also called Leads are created on each request
+      and companies are created if name and location parameters are present.
+      Conversation is initiated only if message or when to contact are present. Tag is created on the lead user
+      with subject.""",
     response = classOf[Result],
     httpMethod = "POST",
     nickname = "user contact forwarding endpoint"
@@ -94,11 +88,6 @@ class ContactCtrl extends Controller {
       new ApiResponse(code = 400, message = "Multiple possible formatted msgs, cf core json parsing doc.")
     )
   )
-  /**
-    * The contact endpoint for lead users
-    *
-    * @return
-    */
   def leadContact = Action.async(parse.json) {
     implicit request =>
       request.body.validate[LeadContact].map {
