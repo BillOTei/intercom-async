@@ -6,7 +6,7 @@ import akka.util.Timeout
 import models.centralapp.BasicUser
 import models.centralapp.places.Place
 import models.centralapp.relationships.BasicPlaceUser
-import models.centralapp.users.User
+import models.centralapp.users.{User, UserReach}
 import models.intercom.ConversationInit
 import models.{EventResponse, Message}
 import play.Logger
@@ -146,6 +146,10 @@ class ForwardActor extends Actor {
         // When a user tried to reach us (with whatever data and mainly through contact form), we store that
         // with that event
         case "user-reach" =>
+          msg.optPayloadObj match {
+            case Some(userPayload: UserReach) =>
+            case _ => Logger.error("user-reach payload invalid")
+          }
 
 
         case _ => Logger.warn(s"Service ${msg.event} not implemented yet")
