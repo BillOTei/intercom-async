@@ -47,11 +47,11 @@ class ForwardActor extends Actor {
               Logger.info("Forwarding placeuser-creation to intercom...")
               (context.actorOf(IntercomActor.props) ? PlaceUserMessage(u.value, p.value)).mapTo[EventResponse].onComplete {
                 case Success(response) => Logger.info(response.body)
-                case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+                case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
               }
-            case e: JsError => Logger.error(s"Place invalid ${e.toString}")
+            case e: JsError => Logger.error(s"Place invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
           }
-          case e: JsError => Logger.error(s"User invalid ${e.toString}")
+          case e: JsError => Logger.error(s"User invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
         }
 
         // On place update
@@ -60,9 +60,9 @@ class ForwardActor extends Actor {
             Logger.info(s"Forwarding ${msg.event} to intercom...")
             (context.actorOf(IntercomActor.props) ? PlaceMessage(p.value)).mapTo[EventResponse].onComplete {
               case Success(response) => Logger.info(response.body)
-              case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+              case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
             }
-          case e: JsError => Logger.error(s"Place invalid ${e.toString}")
+          case e: JsError => Logger.error(s"Place invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
         }
 
         // When a user reaches us with place data that we don't already have in CentralApp
@@ -74,7 +74,7 @@ class ForwardActor extends Actor {
               (context.actorOf(IntercomActor.props) ? BasicPlaceUserMessage(placeUserPayload)).
                 mapTo[EventResponse].onComplete {
                   case Success(response) => Logger.info(response.body)
-                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
                 }
             case _ => Logger.error("BasicPlaceUser payload invalid")
           }
@@ -85,9 +85,9 @@ class ForwardActor extends Actor {
             Logger.info(s"Forwarding ${msg.event} to intercom...")
             (context.actorOf(IntercomActor.props) ? UserMessage(u.value)).mapTo[EventResponse].onComplete {
               case Success(response) => Logger.info(response.body)
-              case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+              case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
             }
-          case e: JsError => Logger.error(s"User invalid ${e.toString}")
+          case e: JsError => Logger.error(s"User invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
         }
 
         // On user login or when he asks for place verification
@@ -103,10 +103,10 @@ class ForwardActor extends Actor {
                 (msg.payload \ "place").asOpt(Place.placeReads(msg.payload)))).
                 mapTo[EventResponse].onComplete {
                   case Success(response) => Logger.info(response.body)
-                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
                 }
 
-            case e: JsError => Logger.error(s"User invalid ${e.toString}")
+            case e: JsError => Logger.error(s"User invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
           }
 
         // On user or lead contact
@@ -119,7 +119,7 @@ class ForwardActor extends Actor {
               (context.actorOf(IntercomActor.props) ? ConversationInitMessage(contactPayload)).
                 mapTo[EventResponse].onComplete {
                   case Success(response) => Logger.info(response.body)
-                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
                 }
             case _ => Logger.error(s"${msg.event} payload invalid")
           }
@@ -134,7 +134,7 @@ class ForwardActor extends Actor {
               (context.actorOf(IntercomActor.props) ? LeadMessage(placeUserPayload.user, Some(placeUserPayload))).
                 mapTo[EventResponse].onComplete {
                   case Success(response) => Logger.info(response.body)
-                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
                 }
             case Some(userPayload: BasicUser) =>
               // So far only intercom leads
@@ -142,7 +142,7 @@ class ForwardActor extends Actor {
               (context.actorOf(IntercomActor.props) ? LeadMessage(userPayload)).
                 mapTo[EventResponse].onComplete {
                   case Success(response) => Logger.info(response.body)
-                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
                 }
             case _ => Logger.error("lead-creation payload invalid")
           }
@@ -158,7 +158,7 @@ class ForwardActor extends Actor {
               (context.actorOf(IntercomActor.props) ? TagMessage(Tag(userPayload.subject, List(userPayload.basicUser)))).
                 mapTo[EventResponse].onComplete {
                   case Success(response) => Logger.info(response.body)
-                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}")
+                  case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
                 }
             case _ => Logger.error("user-reach payload invalid")
           }
