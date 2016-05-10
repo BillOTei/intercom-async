@@ -1,9 +1,9 @@
 package models.centralapp.contacts
 
 import models.Message
+import models.centralapp.BasicUser
 import models.centralapp.places.BasicPlace
 import models.centralapp.relationships.BasicPlaceUser
-import models.centralapp.users.BasicUser
 import models.intercom.ConversationInit
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -46,6 +46,7 @@ object LeadContact {
   def process(leadContact: LeadContact) = {
     val system = Akka.system()
 
+    // Leads are always created, never fetched
     if (leadContact.whenToContact.isDefined || leadContact.message.isDefined) {
       system.actorOf(ForwardActor.props) ! Forward(
         Message[ConversationInit](
@@ -92,12 +93,13 @@ object LeadContact {
     * @param leadContact: the data from the contact
     * @return
     */
-  def getBasicUser(leadContact: LeadContact): BasicUser = {
+  def getBasicUser(leadContact: LeadContact, optionalIntercomId: Option[String] = None): BasicUser = {
     new BasicUser {
       override def email: String = leadContact.email
       override def optName: Option[String] = Some(leadContact.name)
       override def optLang: Option[String] = leadContact.language
       override def optPhone: Option[String] = Some(leadContact.phone)
+      override def optIntercomId: Option[String] = optionalIntercomId
     }
   }
 }

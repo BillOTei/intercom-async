@@ -41,10 +41,6 @@ class EventCtrl extends Controller {
       new ApiResponse(code = 400, message = "Multiple possible formatted msgs, cf core json parsing doc.")
     )
   )
-  /**
-    * Endpoint to receive messages as http
-    * @return
-    */
   def add = Action.async(parse.json) {
     implicit request =>
       request.body.validate[Message[Nothing]].map {

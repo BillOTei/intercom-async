@@ -44,11 +44,6 @@ class ContactCtrl extends Controller {
       new ApiResponse(code = 401, message = "ERR.USER.UNAUTHORIZED")
     )
   )
-  /**
-    * The contact endpoint for authenticated users
-    *
-    * @return
-    */
   def userContact = authenticatedAction.async(parse.json) {
     implicit request =>
       request.body.validate[UserContact].map {
@@ -93,11 +88,6 @@ class ContactCtrl extends Controller {
       new ApiResponse(code = 400, message = "Multiple possible formatted msgs, cf core json parsing doc.")
     )
   )
-  /**
-    * The contact endpoint for lead users
-    *
-    * @return
-    */
   def leadContact = Action.async(parse.json) {
     implicit request =>
       request.body.validate[LeadContact].map {

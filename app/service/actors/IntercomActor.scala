@@ -2,10 +2,11 @@ package service.actors
 
 import akka.actor.{Actor, Props}
 import helpers.HttpClient
+import models.centralapp.BasicUser
 import models.centralapp.contacts.LeadContact
 import models.centralapp.places.{BasicPlace, Place}
 import models.centralapp.relationships.BasicPlaceUser
-import models.centralapp.users.{BasicUser, User => CentralAppUser}
+import models.centralapp.users.{User => CentralAppUser}
 import models.intercom._
 import play.api.Play.current
 import play.api.libs.json.{JsObject, Json}
@@ -27,12 +28,13 @@ object IntercomActor {
 
   case class UserMessage(user: CentralAppUser)
 
+  case class TagMessage(tag: Tag)
+
   case class EventMessage(name: String, createdAt: Long, user: CentralAppUser, optPlace: Option[Place])
 
   case class ConversationInitMessage(conversationInit: ConversationInit)
 }
 
-// Todo add persistence system if needed
 class IntercomActor extends Actor {
   import IntercomActor._
 
@@ -99,9 +101,18 @@ class IntercomActor extends Actor {
           case Success(leadJson) =>
             implicit val needAnswer = true
             HttpClient.postDataToIntercomApi(
-              "messges",
+              "messages",
               Json.toJson(conversationInit.copy(optLeadId = (leadJson \ "user_id").asOpt[String])).as[JsObject],
               sender
+            )
+            // Tag the new created lead
+            conversationInit.optLeadContact.foreach(
+              leadContact => self ! TagMessage(
+                Tag(
+                  leadContact.subject,
+                  List(LeadContact.getBasicUser(leadContact, (leadJson \ "id").asOpt[String]))
+                )
+              )
             )
           case Failure(e) => sender ! Answer(Failure(e))
         }
@@ -116,6 +127,9 @@ class IntercomActor extends Actor {
       if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined) {
         HttpClient.postDataToIntercomApi("contacts", Lead.toJson(user, optPlaceUser), sender)
       } else sender ! Failure(new Throwable(s"Intercom basic user invalid: ${user.toString}"))
+
+    case TagMessage(tag) =>
+      HttpClient.postDataToIntercomApi("tags", Json.toJson(tag).as[JsObject], sender)
 
     case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
   }

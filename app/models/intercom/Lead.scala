@@ -1,7 +1,7 @@
 package models.intercom
 
+import models.centralapp.BasicUser
 import models.centralapp.relationships.BasicPlaceUser
-import models.centralapp.users.BasicUser
 import play.api.libs.json.{JsString, Json}
 
 object Lead {

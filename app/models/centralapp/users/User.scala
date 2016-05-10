@@ -1,6 +1,6 @@
 package models.centralapp.users
 
-import models.centralapp.Attribution
+import models.centralapp.{Attribution, BasicUser}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -15,8 +15,8 @@ case class User(
                  //browserLang: Option[String],
                  attribution: Option[Attribution],
                  billingInfo: Option[UserBilling],
-                 signupDate: Option[Long] = Some(System.currentTimeMillis),
-                 lastSeenDate: Option[Long] = Some(System.currentTimeMillis),
+                 signupDate: Option[Long],
+                 lastSeenDate: Option[Long],
                  lastContactedDate: Option[Long],
                  lastHeardFromDate: Option[Long],
                  nbOfPendingPlaces: Option[Int],
