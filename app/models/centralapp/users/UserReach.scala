@@ -2,4 +2,4 @@ package models.centralapp.users
 
 import models.centralapp.BasicUser
 
-case class UserReach(basicUser: BasicUser, subject: String)
+case class UserReach(subject: String, basicUser: BasicUser)

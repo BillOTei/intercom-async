@@ -28,12 +28,13 @@ object IntercomActor {
 
   case class UserMessage(user: CentralAppUser)
 
+  case class TagMessage(tag: Tag)
+
   case class EventMessage(name: String, createdAt: Long, user: CentralAppUser, optPlace: Option[Place])
 
   case class ConversationInitMessage(conversationInit: ConversationInit)
 }
 
-// Todo add persistence system if needed
 class IntercomActor extends Actor {
   import IntercomActor._
 
@@ -100,7 +101,7 @@ class IntercomActor extends Actor {
           case Success(leadJson) =>
             implicit val needAnswer = true
             HttpClient.postDataToIntercomApi(
-              "messges",
+              "messages",
               Json.toJson(conversationInit.copy(optLeadId = (leadJson \ "user_id").asOpt[String])).as[JsObject],
               sender
             )
@@ -117,6 +118,9 @@ class IntercomActor extends Actor {
       if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined) {
         HttpClient.postDataToIntercomApi("contacts", Lead.toJson(user, optPlaceUser), sender)
       } else sender ! Failure(new Throwable(s"Intercom basic user invalid: ${user.toString}"))
+
+    case TagMessage(tag) =>
+      HttpClient.postDataToIntercomApi("tags", Json.toJson(tag).as[JsObject], sender)
 
     case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
   }

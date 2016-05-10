@@ -4,6 +4,7 @@ import models.Message
 import models.centralapp.BasicUser
 import models.centralapp.places.BasicPlace
 import models.centralapp.relationships.BasicPlaceUser
+import models.centralapp.users.UserReach
 import models.intercom.ConversationInit
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -46,6 +47,7 @@ object UserContact {
       placeName <- userContact.businessName
       location <- userContact.location
     } yield {
+      // We store the basic place info if available
       system.actorOf(ForwardActor.props) ! Forward(
         Message[BasicPlaceUser](
           "basic-placeuser-creation",
@@ -64,6 +66,7 @@ object UserContact {
       )
     }
 
+    // If there are contact info we initiate conversation
     if (userContact.whenToContact.isDefined || userContact.message.isDefined) {
       system.actorOf(ForwardActor.props) ! Forward(
         Message[ConversationInit](
@@ -78,5 +81,21 @@ object UserContact {
         )
       )
     }
+
+    // We persist the user attempt to reach us
+    system.actorOf(ForwardActor.props) ! Forward(
+      Message[UserReach](
+        "user-reach",
+        Json.obj(),
+        Some(
+          UserReach(
+            userContact.subject,
+            new BasicUser {
+              override def email: String = userEmail
+            }
+          )
+        )
+      )
+    )
   }
 }

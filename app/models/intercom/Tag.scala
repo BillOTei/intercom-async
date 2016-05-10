@@ -13,10 +13,8 @@ object Tag {
     override def writes(o: Tag): JsValue =
       Json.obj(
         "name" -> o.name,
-        "users" -> Json.arr(
-          o.users.map(
-            user => if (user.optIntercomId.isDefined) Json.obj("id" -> user.optIntercomId.get) else Json.obj("email" -> user.email)
-          )
+        "users" -> o.users.map(
+          user => if (user.optIntercomId.isDefined) Json.obj("id" -> user.optIntercomId.get) else Json.obj("email" -> user.email)
         )
       )
   }
