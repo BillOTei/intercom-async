@@ -46,6 +46,7 @@ object LeadContact {
   def process(leadContact: LeadContact) = {
     val system = Akka.system()
 
+    // Leads are always created, never fetched
     if (leadContact.whenToContact.isDefined || leadContact.message.isDefined) {
       system.actorOf(ForwardActor.props) ! Forward(
         Message[ConversationInit](
