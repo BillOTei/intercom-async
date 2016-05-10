@@ -148,7 +148,7 @@ class ForwardActor extends Actor {
           }
 
         // When a user tried to reach us (with whatever data and mainly through contact form), we store this
-        // with that event
+        // with that event, due to intercom lead endpoints design, the lead-reach is done under the hood inside intercom actor atm
         case "user-reach" =>
           // No json payload atm (internal msg)
           msg.optPayloadObj match {
