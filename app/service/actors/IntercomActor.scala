@@ -105,6 +105,15 @@ class IntercomActor extends Actor {
               Json.toJson(conversationInit.copy(optLeadId = (leadJson \ "user_id").asOpt[String])).as[JsObject],
               sender
             )
+            // Tag the new created lead
+            conversationInit.optLeadContact.foreach(
+              leadContact => self ! TagMessage(
+                Tag(
+                  leadContact.subject,
+                  List(LeadContact.getBasicUser(leadContact, (leadJson \ "id").asOpt[String]))
+                )
+              )
+            )
           case Failure(e) => sender ! Answer(Failure(e))
         }
       ) getOrElse HttpClient.postDataToIntercomApi("messages", Json.toJson(conversationInit).as[JsObject], sender)

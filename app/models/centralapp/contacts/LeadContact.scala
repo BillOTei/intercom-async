@@ -93,12 +93,13 @@ object LeadContact {
     * @param leadContact: the data from the contact
     * @return
     */
-  def getBasicUser(leadContact: LeadContact): BasicUser = {
+  def getBasicUser(leadContact: LeadContact, optionalIntercomId: Option[String] = None): BasicUser = {
     new BasicUser {
       override def email: String = leadContact.email
       override def optName: Option[String] = Some(leadContact.name)
       override def optLang: Option[String] = leadContact.language
       override def optPhone: Option[String] = Some(leadContact.phone)
+      override def optIntercomId: Option[String] = optionalIntercomId
     }
   }
 }
