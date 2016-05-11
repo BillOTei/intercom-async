@@ -9,7 +9,19 @@
     </appender>
 
     <appender name="Sentry" class="com.getsentry.raven.logback.SentryAppender">
-        <dsn>https://2d2329fae9e14fcab9dddbcef02fb9b5:e52100f91cc64bb3ac9b64d16f489818@app.getsentry.com/77650?options</dsn>
+        <if condition='property("SENTRY_ENVIRONMENT").contains("development")'>
+            <then>
+                <dsn>https://2d2329fae9e14fcab9dddbcef02fb9b5:e52100f91cc64bb3ac9b64d16f489818@app.getsentry.com/77650?options</dsn>
+            </then>
+        </if>
+        <if condition='property("SENTRY_ENVIRONMENT").contains("production")'>
+            <then>
+                <dsn>https://bc958c28e53a4bda8108f53108cca74a:56d3e74af3f04085b35b4f5b4be0e42d@app.getsentry.com/77879?options</dsn>
+            </then>
+            <else>
+                <dsn>https://5feca592cbd042f98d0038edebee8c6a:3f1d301f95bc46418f0ee076aa804f7d@app.getsentry.com/77868?options</dsn>
+            </else>
+        </if>
         <!--<tags>tag1:centralapp-events</tags>-->
         <!-- Optional, allows to select the ravenFactory -->
         <!--<ravenFactory>com.getsentry.raven.DefaultRavenFactory</ravenFactory>-->
