@@ -26,7 +26,7 @@ object Server {
     implicit val materializer = ActorMaterializer()
 
     val handler = Sink.foreach[Tcp.IncomingConnection] { conn =>
-      Logger.info("Event server connected to: " + conn.remoteAddress)
+      Logger.debug("Event server connected to: " + conn.remoteAddress)
       // Get the ByteString flow and reconstruct the msg for handling and then output it back
       // that is how handleWith work apparently
       conn.handleWith(
@@ -41,9 +41,9 @@ object Server {
 
     binding.onComplete {
       case Success(b) =>
-        Logger.info("Event server started, listening on: " + b.localAddress)
+        Logger.debug("Event server started, listening on: " + b.localAddress)
       case Failure(e) =>
-        Logger.info(s"Event server could not bind to $address:$port: ${e.getMessage}")
+        Logger.debug(s"Event server could not bind to $address:$port: ${e.getMessage}")
         system.terminate()
     }
   }
@@ -57,11 +57,11 @@ object Server {
     * @return
     */
   def handleIncomingMessages(system: ActorSystem, stringMsg: String): String = {
-    Logger.info("Event server received message: " + stringMsg)
+    Logger.debug("Event server received message: " + stringMsg)
     // Forward the message to the appropriate actor, ask for the response
     Json.parse(stringMsg).validate(Message.messageReads) match {
       case m: JsSuccess[Message[Nothing]] => system.actorOf(ForwardActor.props) ! Forward(m.value)
-      case e: JsError => Logger.error(s"Message invalid $stringMsg")
+      case e: JsError => Logger.error(s"Message invalid $stringMsg", new Throwable(e.errors.mkString(";")))
     }
     // Output the strmsg for bytestring conversion to respond to the publisher
     // same message sent back means transmission went ok on the publisher side
