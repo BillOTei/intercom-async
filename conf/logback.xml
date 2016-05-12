@@ -22,6 +22,7 @@
                 <dsn>https://5feca592cbd042f98d0038edebee8c6a:3f1d301f95bc46418f0ee076aa804f7d@app.getsentry.com/77868?options</dsn>
             </else>
         </if>
+        <minLevel>INFO</minLevel>
         <!--<tags>tag1:centralapp-events</tags>-->
         <!-- Optional, allows to select the ravenFactory -->
         <!--<ravenFactory>com.getsentry.raven.DefaultRavenFactory</ravenFactory>-->
