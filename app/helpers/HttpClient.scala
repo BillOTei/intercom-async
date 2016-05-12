@@ -42,6 +42,12 @@ object HttpClient {
     )
   }
 
+  /**
+    * Same as above for get method
+    * @param endpoint: intercom endpoint users, companies, events...
+    * @param params: the params to query
+    * @return
+    */
   def getFromIntercomApi(endpoint: String, params: (String, String)*) = {
     handleIntercomResponse(
       Try(
