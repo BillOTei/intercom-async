@@ -18,21 +18,23 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object IntercomActor {
   def props = Props[IntercomActor]
 
-  case class PlaceUserMessage(user: CentralAppUser, place: Place)
+  case class PlaceUserMessage(user: CentralAppUser, place: Place) extends IntercomMessage
 
-  case class PlaceMessage(place: Place)
+  case class PlaceMessage(place: Place) extends IntercomMessage
 
-  case class BasicPlaceUserMessage(placeUser: BasicPlaceUser)
+  case class BasicPlaceUserMessage(placeUser: BasicPlaceUser) extends IntercomMessage
 
-  case class LeadMessage(user: BasicUser, optPlaceUser: Option[BasicPlaceUser] = None)
+  case class LeadMessage(user: BasicUser, optPlaceUser: Option[BasicPlaceUser] = None) extends IntercomMessage
 
-  case class UserMessage(user: CentralAppUser)
+  case class UserMessage(user: CentralAppUser) extends IntercomMessage
 
-  case class TagMessage(tag: Tag)
+  case class TagMessage(tag: Tag) extends IntercomMessage
 
-  case class EventMessage(name: String, createdAt: Long, user: CentralAppUser, optPlace: Option[Place])
+  case class EventMessage(name: String, createdAt: Long, user: CentralAppUser, optPlace: Option[Place]) extends IntercomMessage
 
-  case class ConversationInitMessage(conversationInit: ConversationInit)
+  case class ConversationInitMessage(conversationInit: ConversationInit) extends IntercomMessage
+
+  case class DeleteAllPlaceUsersMessage(ownerEmail: String, placeId: Long) extends IntercomMessage
 }
 
 class IntercomActor extends Actor {
