@@ -54,6 +54,12 @@ class ForwardActor extends Actor {
           case e: JsError => Logger.error(s"User invalid ${e.toString}")
         }
 
+        case "all-placeusers-deletion" =>
+          (msg.payload \ "permission").validate[String] match {
+            case s: JsSuccess[String] if Place.CAN_DELETE_REL_TYPES.contains(s.value) =>
+            case e: JsError => Logger.error(s"PlaceUsers can only be deleted by centralappAdmin or owner ${e.toString}")
+          }
+
         // On place update
         case "place-update" => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
           case p: JsSuccess[Place] =>
