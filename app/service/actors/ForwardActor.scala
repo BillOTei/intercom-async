@@ -44,7 +44,7 @@ class ForwardActor extends Actor {
         case "placeuser-creation" => (msg.payload \ "user").validate(User.userReads) match {
           case u: JsSuccess[User] => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
             case p: JsSuccess[Place] =>
-              Logger.info("Forwarding placeuser-creation to intercom...")
+              Logger.debug("Forwarding placeuser-creation to intercom...")
               (context.actorOf(IntercomActor.props) ? PlaceUserMessage(u.value, p.value)).mapTo[EventResponse].onComplete {
                 case Success(response) => Logger.info(response.body)
                 case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
@@ -57,7 +57,7 @@ class ForwardActor extends Actor {
         // On place update
         case "place-update" => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
           case p: JsSuccess[Place] =>
-            Logger.info(s"Forwarding ${msg.event} to intercom...")
+            Logger.debug(s"Forwarding ${msg.event} to intercom...")
             (context.actorOf(IntercomActor.props) ? PlaceMessage(p.value)).mapTo[EventResponse].onComplete {
               case Success(response) => Logger.info(response.body)
               case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
@@ -70,7 +70,7 @@ class ForwardActor extends Actor {
           // No json payload atm (internal msg)
           msg.optPayloadObj match {
             case Some(placeUserPayload: BasicPlaceUser) =>
-              Logger.info(s"Forwarding ${msg.event} to intercom...")
+              Logger.debug(s"Forwarding ${msg.event} to intercom...")
               (context.actorOf(IntercomActor.props) ? BasicPlaceUserMessage(placeUserPayload)).
                 mapTo[EventResponse].onComplete {
                   case Success(response) => Logger.info(response.body)
@@ -82,7 +82,7 @@ class ForwardActor extends Actor {
         // On user creation or update
         case "user-creation" | "user-update" => (msg.payload \ "user").validate(User.userReads) match {
           case u: JsSuccess[User] =>
-            Logger.info(s"Forwarding ${msg.event} to intercom...")
+            Logger.debug(s"Forwarding ${msg.event} to intercom...")
             (context.actorOf(IntercomActor.props) ? UserMessage(u.value)).mapTo[EventResponse].onComplete {
               case Success(response) => Logger.info(response.body)
               case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
@@ -95,14 +95,14 @@ class ForwardActor extends Actor {
           // See if we need a paypload for this event or if it is possible to use only one case "event"
           (msg.payload \ "user").validate(User.userReads) match {
             case u: JsSuccess[User] =>
-              Logger.info(s"Forwarding ${msg.event} event to intercom...")
+              Logger.debug(s"Forwarding ${msg.event} event to intercom...")
               (context.actorOf(IntercomActor.props) ? EventMessage(
                 msg.event,
                 (msg.payload \ "created_at").asOpt[Long].getOrElse(System.currentTimeMillis / 1000),
                 u.value,
                 (msg.payload \ "place").asOpt(Place.placeReads(msg.payload)))).
                 mapTo[EventResponse].onComplete {
-                  case Success(response) => Logger.info(response.body)
+                  case Success(response) => Logger.debug(response.body)
                   case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
                 }
 
@@ -115,10 +115,10 @@ class ForwardActor extends Actor {
           msg.optPayloadObj match {
             case Some(contactPayload: ConversationInit) =>
               // So far only intercom conversation contact
-              Logger.info(s"Forwarding ${msg.event} to intercom...")
+              Logger.debug(s"Forwarding ${msg.event} to intercom...")
               (context.actorOf(IntercomActor.props) ? ConversationInitMessage(contactPayload)).
                 mapTo[EventResponse].onComplete {
-                  case Success(response) => Logger.info(response.body)
+                  case Success(response) => Logger.debug(response.body)
                   case Failure(err) => Logger.error(s"ForwardActor did not succeed: ${err.getMessage}", err)
                 }
             case _ => Logger.error(s"${msg.event} payload invalid")
@@ -130,7 +130,7 @@ class ForwardActor extends Actor {
           msg.optPayloadObj match {
             case Some(placeUserPayload: BasicPlaceUser) =>
               // So far only intercom leads
-              Logger.info(s"Forwarding lead-creation with place to intercom...")
+              Logger.debug(s"Forwarding lead-creation with place to intercom...")
               (context.actorOf(IntercomActor.props) ? LeadMessage(placeUserPayload.user, Some(placeUserPayload))).
                 mapTo[EventResponse].onComplete {
                   case Success(response) => Logger.info(response.body)
@@ -138,7 +138,7 @@ class ForwardActor extends Actor {
                 }
             case Some(userPayload: BasicUser) =>
               // So far only intercom leads
-              Logger.info(s"Forwarding lead-creation to intercom...")
+              Logger.debug(s"Forwarding lead-creation to intercom...")
               (context.actorOf(IntercomActor.props) ? LeadMessage(userPayload)).
                 mapTo[EventResponse].onComplete {
                   case Success(response) => Logger.info(response.body)
@@ -154,7 +154,7 @@ class ForwardActor extends Actor {
           msg.optPayloadObj match {
             case Some(userPayload: UserReach) =>
               // So far we only use intercom tagging system for that
-              Logger.info(s"Forwarding user-reach to intercom...")
+              Logger.debug(s"Forwarding user-reach to intercom...")
               (context.actorOf(IntercomActor.props) ? TagMessage(Tag(userPayload.subject, List(userPayload.basicUser)))).
                 mapTo[EventResponse].onComplete {
                   case Success(response) => Logger.info(response.body)
