@@ -5,7 +5,7 @@ import akka.actor.Status.Failure
 import models.EventResponse
 import play.api.libs.ws.{WS, WSAuthScheme, WSRequest, WSResponse}
 import play.api.Play.current
-import play.api.libs.json.{JsNull, JsObject, JsValue}
+import play.api.libs.json._
 import service.actors.ForwardActor.Answer
 
 import scala.concurrent.Future
@@ -46,14 +46,46 @@ object HttpClient {
     * Same as above for get method
     * @param endpoint: intercom endpoint users, companies, events...
     * @param params: the params to query
+    * @param sender: the actor ref to send response to, mainly useful in case of failure
     * @return
     */
-  def getFromIntercomApi(endpoint: String, params: (String, String)*) = {
+  def getFromIntercomApi(endpoint: String, sender: ActorRef, params: (String, String)*) = {
     handleIntercomResponse(
       Try(
         getAuthIntercomRequest(endpoint).withQueryString(params: _*).get
       )
     )
+  }
+
+  def getAllPagedFromIntercom(endpoint: String, dataType: String, sender: ActorRef, params: (String, String)*) = {
+
+    def go(accData: List[JsObject], page: Int): Future[Try[List[JsObject]]] = {
+      val fullParams = params ++ Seq("page" -> page.toString, "per_page" -> "2")
+
+      val data =  getFromIntercomApi(endpoint, sender, fullParams: _*)
+      val t = data map {
+        case Success(pages) => (pages \ "pages" \ "next").asOpt[String] match {
+
+          case Some(nextUrl) => (pages \ dataType).validate[List[JsObject]] match {
+
+            case JsSuccess(list: List[JsObject], _) => go(accData ++ list, page + 1)
+
+            case e: JsError =>
+              //sender ! Failure(new Throwable(e.errors.mkString(";")))
+              List.empty
+          }
+
+          case _ => accData
+        }
+
+        case scala.util.Failure(e) =>
+          //sender ! Failure(e)
+          List.empty
+      }
+
+    }
+
+    go(List.empty, 1)
   }
 
   /**
