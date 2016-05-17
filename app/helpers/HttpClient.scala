@@ -73,17 +73,17 @@ object HttpClient {
             if((jsonRes \ "pages" \ "next").asOpt[String].isDefined) go(
               accData = accData ++ (jsonRes \ dataType).asOpt[List[JsObject]].getOrElse(Nil),
               page = page + 1)
-            else Future(Success(Nil))
+            else Future(Success(accData))
 
           }
 
-        } getOrElse Future(Success(Nil))
+        } getOrElse Future(Success(accData))
 
       }
 
     }
 
-    go(List.empty, 1)
+    go(Nil, 1)
   }
 
   /**
