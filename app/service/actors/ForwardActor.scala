@@ -51,17 +51,10 @@ class ForwardActor extends Actor {
         }
 
         // When owner or centralAppAdmin deletes a place, that is what happens: all place user relationships deleted
-        case "all-placeusers-deletion" =>
-          (msg.payload \ "permission").validate[String] match {
-            case s: JsSuccess[String] if Place.CAN_DELETE_REL_TYPES.contains(s.value) =>
-              {
-                for {
-                  userEmail <- (msg.payload \ "user" \ "email").asOpt[String](Reads.email)
-                  placeId <- (msg.payload \ "place" \ "id").asOpt[Long]
-                } yield DeleteAllPlaceUsersMessage(userEmail, placeId)
-              } getOrElse Logger.error(s"Place or User invalid ${msg.payload.toString}")
-            case e: JsError => Logger.error(s"PlaceUsers can only be deleted by centralappAdmin or owner ${e.toString}")
-          }
+        case "all-placeusers-deletion" => (msg.payload \ "place" \ "id").validate[Long] match {
+          case JsSuccess(placeId: Long, _) => forwardAndAskIntercom(DeleteAllPlaceUsersMessage("", placeId), msg.event)
+          case e: JsError => Logger.error(s"Place invalid ${e.errors.mkString(";")}")
+        }
 
         // On place update
         case "place-update" => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
