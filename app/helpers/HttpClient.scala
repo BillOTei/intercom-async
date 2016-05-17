@@ -70,10 +70,11 @@ object HttpClient {
 
           jsonRes => {
 
-            if((jsonRes \ "pages" \ "next").asOpt[String].isDefined) go(
+            if ((jsonRes \ "pages" \ "next").asOpt[String].isDefined) go(
               accData = accData ++ (jsonRes \ dataType).asOpt[List[JsObject]].getOrElse(Nil),
-              page = page + 1)
-            else Future(Success(accData))
+              page = page + 1
+            )
+            else Future(Success(accData ++ (jsonRes \ dataType).asOpt[List[JsObject]].getOrElse(Nil)))
 
           }
 
