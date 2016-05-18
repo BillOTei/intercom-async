@@ -63,7 +63,7 @@ object HttpClient {
 
     def go(accData: List[JsObject], page: Int): Future[Try[List[JsObject]]] = {
 
-      val fullParams = params ++ Seq("page" -> page.toString, "per_page" -> "2")
+      val fullParams = params ++ Seq("page" -> page.toString, "per_page" -> "50")
 
       getFromIntercomApi(endpoint, sender, fullParams: _*).flatMap {
 
