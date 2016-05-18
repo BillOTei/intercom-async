@@ -54,7 +54,8 @@ object HttpClient {
     handleIntercomResponse(
       Try(
         getAuthIntercomRequest(endpoint).withQueryString(params: _*).get
-      )
+      ),
+      Some(sender)
     )
   }
 
