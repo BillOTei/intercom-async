@@ -3,9 +3,11 @@ package controllers
 import controllers.actions.UserActions.authenticatedAction
 import helpers.JsonError
 import io.swagger.annotations.{ApiResponse, _}
+import models.centralapp.Country
 import models.centralapp.contacts.{LeadContact, UserContact}
 import play.api.mvc._
 import play.libs.Akka
+import play.api.Play.current
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -92,30 +94,17 @@ class ContactCtrl extends Controller {
     implicit request =>
       request.body.validate[LeadContact].map {
         case lc: LeadContact =>
-          // Checks to see whether the user already contacted us or not (users and leads)
-          // Not done atm
-          /*HttpClient.getFromIntercomApi("users", "email" -> lc.email) map {
-            case Success(json) if json == JsNull =>
-              // No user found good, let's check leads now
-              HttpClient.getFromIntercomApi("contacts", "email" -> lc.email) map {
-                case Success(listJson) =>
-                case Failure(e) => InternalServerError(JsonError.stringError(e.getMessage))
-              }
-
-            case Success(userJson) => Ok(userJson)
-              // User found so conversation and data go to him (and delete the potential leads)
-              (userJson \ "custom_attributes" \ "centralapp_id").asOpt[Long] match {
-                case Some(userId) =>
-                case _ =>
-                  // Nasty case
-                  Logger.error(s"Lead contact: intercom user found but no centralapp_id: ${lc.email}")
-                  BadRequest(JsonError.stringError(UserContact.MSG_USER_INVALID))
-              }
-
-            case Failure(e) => InternalServerError(JsonError.stringError(e.getMessage))
-          }*/
-          LeadContact.process(lc)
-          Future(Accepted)
+          lc.language map {
+            Country.getAtlasCountry(_) map {
+              case Some(country) =>
+                LeadContact.process(lc)
+                Accepted
+              case _ => BadRequest(JsonError.stringError(LeadContact.MSG_LANGUAGE_INVALID, "language"))
+            }
+          } getOrElse {
+            LeadContact.process(lc)
+            Future(Accepted)
+          }
       }.recoverTotal {
         e => Future(BadRequest(JsonError.jsErrors(e)))
       }

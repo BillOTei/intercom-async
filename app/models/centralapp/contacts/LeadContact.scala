@@ -25,6 +25,8 @@ case class LeadContact(
 
 object LeadContact {
 
+  val MSG_LANGUAGE_INVALID = "ERR.LANGUAGE_INVALID"
+
   implicit val jsonReads: Reads[LeadContact] = (
       (JsPath \ "subject").read[String] and
       (JsPath \ "message").readNullable[String] and

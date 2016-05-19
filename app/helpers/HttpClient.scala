@@ -3,12 +3,14 @@ package helpers
 import akka.actor.ActorRef
 import akka.actor.Status.Failure
 import models.EventResponse
+import models.centralapp.{Country, CountryReaders}
+import play.api.Play
 import play.api.libs.ws.{WS, WSAuthScheme, WSRequest, WSResponse}
 import play.api.Play.current
 import play.api.libs.json.{JsNull, JsObject, JsValue}
 import service.actors.ForwardActor.Answer
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -106,6 +108,27 @@ object HttpClient {
           sender => if (!needAnswer) sender ! Failure(e) else sender ! Answer(scala.util.Failure(e))
         )
         Future.failed(new Throwable(e.getMessage))
+    }
+  }
+
+  /**
+    * get the list of countries currently supported by Atlas service
+    *
+    * @param ec execution context
+    * @return a future of the list of countries
+    */
+  def getAtlasCountries(implicit ec: ExecutionContext): Future[Try[List[Country]]] = {
+    WS.url(Play.configuration.getString("atlasservice.static.countries.url").get).get().map {
+      res => Try {
+        res.json.
+          validate[List[JsValue]].
+          asOpt.
+          map {
+            _.flatMap {
+              _.validate[Country](CountryReaders.atlas).asOpt
+            }
+          }.getOrElse(Nil)
+      }
     }
   }
 }
