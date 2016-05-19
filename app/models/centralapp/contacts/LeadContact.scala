@@ -1,10 +1,10 @@
 package models.centralapp.contacts
 
-import models.Message
 import models.centralapp.BasicUser
 import models.centralapp.places.BasicPlace
 import models.centralapp.relationships.BasicPlaceUser
 import models.intercom.ConversationInit
+import models.{JsonReadsConstraints, Message}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.libs.Akka
@@ -23,17 +23,17 @@ case class LeadContact(
                         location: Option[String]
                       ) extends ContactRequest
 
-object LeadContact {
+object LeadContact extends JsonReadsConstraints {
 
   val MSG_LANGUAGE_INVALID = "ERR.LANGUAGE_INVALID"
 
   implicit val jsonReads: Reads[LeadContact] = (
-      (JsPath \ "subject").read[String] and
-      (JsPath \ "message").readNullable[String] and
+      (JsPath \ "subject").read[String](nonEmptyString) and
+      (JsPath \ "message").readNullable[String](nonEmptyString) and
       (JsPath \ "when_to_contact").readNullable[String] and
-      (JsPath \ "name").read[String] and
+      (JsPath \ "name").read[String](nonEmptyString) and
       (JsPath \ "email").read[String](Reads.email) and
-      (JsPath \ "phone").read[String] and
+      (JsPath \ "phone").read[String](nonEmptyString) and
       (JsPath \ "language").readNullable[String](Reads.minLength[String](2) keepAnd Reads.maxLength[String](2)) and
       (JsPath \ "business_name").readNullable[String] and
       (JsPath \ "location").readNullable[String]
