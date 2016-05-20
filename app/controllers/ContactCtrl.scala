@@ -50,11 +50,10 @@ class ContactCtrl extends Controller {
     implicit request =>
       request.body.validate[UserContact].map {
         case uc: UserContact =>
-          if (uc.userId == request.user.centralAppId) {
-
+          //if (uc.userId == request.user.centralAppId) {
             UserContact.process(uc, request.user.email)
             Future(Accepted)
-          } else Future(Unauthorized(JsonError.stringError(UserContact.MSG_UNAUTHORIZED)))
+          //} else Future(Unauthorized(JsonError.stringError(UserContact.MSG_UNAUTHORIZED)))
       }.recoverTotal {
         e => Future(BadRequest(JsonError.jsErrors(e)))
       }

@@ -13,7 +13,7 @@ import service.actors.ForwardActor
 import service.actors.ForwardActor.Forward
 
 case class UserContact(
-                        userId: Long,
+                        userId: Option[Long],
                         token: Option[String],
                         subject: String,
                         message: Option[String],
@@ -27,7 +27,7 @@ object UserContact extends JsonReadsConstraints {
   val MSG_USER_INVALID = "ERR.USER.INVALID"
 
   implicit val jsonReads: Reads[UserContact] = (
-    (JsPath \ "user_id").read[Long] and
+    (JsPath \ "user_id").readNullable[Long] and
       (JsPath \ "token").readNullable[String] and
       (JsPath \ "subject").read[String](nonEmptyString) and
       (JsPath \ "message").readNullable[String](nonEmptyString) and
