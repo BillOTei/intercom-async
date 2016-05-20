@@ -46,16 +46,20 @@ class ContactCtrl extends Controller {
       new ApiResponse(code = 401, message = "ERR.USER.UNAUTHORIZED")
     )
   )
-  def userContact = authenticatedAction.async(parse.json) {
+  def userContact = authenticatedAction.async {
     implicit request =>
-      request.body.validate[UserContact].map {
-        case uc: UserContact =>
-          //if (uc.userId == request.user.centralAppId) {
-            UserContact.process(uc, request.user.email)
-            Future(Accepted)
-          //} else Future(Unauthorized(JsonError.stringError(UserContact.MSG_UNAUTHORIZED)))
-      }.recoverTotal {
-        e => Future(BadRequest(JsonError.jsErrors(e)))
+      request.body.asJson match {
+        case Some(json) =>
+          json.validate[UserContact].map {
+            case uc: UserContact =>
+              //if (uc.userId == request.user.centralAppId) {
+                UserContact.process(uc, request.user.email)
+                Future(Accepted)
+              //} else Future(Unauthorized(JsonError.stringError(UserContact.MSG_UNAUTHORIZED)))
+            }.recoverTotal {
+              e => Future(BadRequest(JsonError.jsErrors(e)))
+            }
+        case _ => Future(BadRequest(JsonError.stringError(UserContact.MSG_USER_INVALID)))
       }
   }
 
