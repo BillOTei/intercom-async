@@ -1,5 +1,7 @@
 package models.centralapp.places
 
+import java.util
+
 import models.centralapp.{Attribution, Plan}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -30,6 +32,12 @@ case class Place(
                   ) extends BasicPlace
 
 object Place {
+  val REL_CENTRALAPP_ADMIN = "CA"
+  val REL_OWNER = "O"
+  val REL_ADMIN = "A"
+  val REL_VIEWER = "V"
+  val CAN_DELETE_REL_TYPES = util.Arrays.asList(REL_CENTRALAPP_ADMIN, REL_OWNER)
+
   def placeReads(payload: JsValue): Reads[Place] = {
     val lang = (payload \ "place" \ "languages").asOpt[List[JsObject]].
       map(_.filter(lg => (lg \ "default").asOpt[Boolean].getOrElse(false))).

@@ -8,6 +8,7 @@ import models.centralapp.places.{BasicPlace, Place}
 import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.{User => CentralAppUser}
 import models.intercom._
+import models.intercom.bulk.Bulk
 import play.api.Play.current
 import play.api.libs.json.{JsObject, Json}
 import service.actors.ForwardActor.Answer
@@ -18,21 +19,23 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object IntercomActor {
   def props = Props[IntercomActor]
 
-  case class PlaceUserMessage(user: CentralAppUser, place: Place)
+  case class PlaceUserMessage(user: CentralAppUser, place: Place) extends IntercomMessage
 
-  case class PlaceMessage(place: Place)
+  case class PlaceMessage(place: Place) extends IntercomMessage
 
-  case class BasicPlaceUserMessage(placeUser: BasicPlaceUser)
+  case class BasicPlaceUserMessage(placeUser: BasicPlaceUser) extends IntercomMessage
 
-  case class LeadMessage(user: BasicUser, optPlaceUser: Option[BasicPlaceUser] = None)
+  case class LeadMessage(user: BasicUser, optPlaceUser: Option[BasicPlaceUser] = None) extends IntercomMessage
 
-  case class UserMessage(user: CentralAppUser)
+  case class UserMessage(user: CentralAppUser) extends IntercomMessage
 
-  case class TagMessage(tag: Tag)
+  case class TagMessage(tag: Tag) extends IntercomMessage
 
-  case class EventMessage(name: String, createdAt: Long, user: CentralAppUser, optPlace: Option[Place])
+  case class EventMessage(name: String, createdAt: Long, user: CentralAppUser, optPlace: Option[Place]) extends IntercomMessage
 
-  case class ConversationInitMessage(conversationInit: ConversationInit)
+  case class ConversationInitMessage(conversationInit: ConversationInit) extends IntercomMessage
+
+  case class DeleteAllPlaceUsersMessage(ownerEmail: String, placeId: Long) extends IntercomMessage
 }
 
 class IntercomActor extends Actor {
@@ -56,6 +59,22 @@ class IntercomActor extends Actor {
     case UserMessage(user: CentralAppUser) =>
       if (User.isValid(user)) HttpClient.postDataToIntercomApi("users", User.toJson(user, None), sender)
       else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
+
+    case DeleteAllPlaceUsersMessage(ownerEmail, placeId) =>
+      // No way of doing that in one go with Intercom API,
+      // First fetch all the users belonging to this place then update each one in a bulk
+      HttpClient.getAllPagedFromIntercom("companies", "users", sender, "company_id" -> placeId.toString, "type" -> "user") map {
+        _ map {
+          jsonUsers => {
+            implicit val needAnswer = true
+            HttpClient.postDataToIntercomApi(
+              "bulk/users",
+              Json.toJson(Bulk.getForCompanyUserDeletion(placeId, jsonUsers)).as[JsObject],
+              sender
+            )
+          }
+        }
+      }
 
     case EventMessage(name, createdAt, user, optPlace) =>
       if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined) {

@@ -72,6 +72,7 @@ object User {
     */
   def toJson(user: CentralAppUser, company: Option[Place]) = Json.obj(
     "name" -> (user.firstName + " " + user.lastName),
+    "user_id" -> user.centralAppId,
     "email" -> user.email,
     "custom_attributes" -> {
       Json.obj(
