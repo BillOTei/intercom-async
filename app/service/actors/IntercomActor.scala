@@ -36,6 +36,8 @@ object IntercomActor {
   case class ConversationInitMessage(conversationInit: ConversationInit) extends IntercomMessage
 
   case class DeleteAllPlaceUsersMessage(ownerEmail: String, placeId: Long) extends IntercomMessage
+
+  case class BulkUserIdUpdate()
 }
 
 class IntercomActor extends Actor {
@@ -75,6 +77,8 @@ class IntercomActor extends Actor {
           }
         }
       }
+
+    case BulkUserIdUpdate =>
 
     case EventMessage(name, createdAt, user, optPlace) =>
       if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined) {
