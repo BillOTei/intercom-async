@@ -4,13 +4,13 @@ import io.intercom.api.{CompanyCollection, CustomAttribute, User => IntercomUser
 import models.centralapp.places.Place
 import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.{User => CentralAppUser}
-import org.joda.time.DateTime
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-
+case class User(id: String, email: String, optUserId: Option[String])
 
 object User {
   /**
@@ -121,4 +121,12 @@ object User {
     )
     else Json.obj()
   }
+
+  implicit val jsonReads: Reads[User] = (
+    (__ \ "id").read[String] and
+      (__ \ "email").read[String] and
+      (__ \ "user_id").readNullable[String]
+    )(User.apply _)
+
+  implicit val jsonListReads: Reads[List[User]] = __.lazyRead(Reads.list[User](jsonReads))
 }
