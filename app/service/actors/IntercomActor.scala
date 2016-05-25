@@ -3,12 +3,14 @@ package service.actors
 import akka.actor.{Actor, Props}
 import helpers.HttpClient
 import models.centralapp.BasicUser
+import models.centralapp.BasicUser.VeryBasicUser
 import models.centralapp.contacts.LeadContact
 import models.centralapp.places.{BasicPlace, Place}
 import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.{User => CentralAppUser}
 import models.intercom._
 import models.intercom.bulk.Bulk
+import play.api.Logger
 import play.api.Play.current
 import play.api.libs.json.{JsObject, Json}
 import service.actors.ForwardActor.Answer
@@ -37,7 +39,7 @@ object IntercomActor {
 
   case class DeleteAllPlaceUsersMessage(ownerEmail: String, placeId: Long) extends IntercomMessage
 
-  case class BulkUserIdUpdate()
+  case class BulkUserIdUpdate(users: List[VeryBasicUser]) extends IntercomMessage
 }
 
 class IntercomActor extends Actor {
@@ -78,7 +80,21 @@ class IntercomActor extends Actor {
         }
       }
 
-    case BulkUserIdUpdate =>
+    case BulkUserIdUpdate(users) =>
+      HttpClient.getAllPagedFromIntercom("users", "users", sender) map {
+        _ map {
+          jsonUsers => {
+            implicit val needAnswer = true
+            Logger.info(jsonUsers.toString)
+            /*HttpClient.postDataToIntercomApi(
+              "bulk/users",
+              Json.toJson(Bulk.getForCompanyUserDeletion(placeId, jsonUsers)).as[JsObject],
+              sender
+            )*/
+          }
+        }
+      }
+
 
     case EventMessage(name, createdAt, user, optPlace) =>
       if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined) {

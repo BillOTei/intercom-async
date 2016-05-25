@@ -4,6 +4,7 @@ import akka.actor.{Actor, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import models.centralapp.BasicUser
+import models.centralapp.BasicUser.VeryBasicUser
 import models.centralapp.places.Place
 import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.{User, UserReach}
@@ -11,7 +12,7 @@ import models.intercom.{ConversationInit, IntercomMessage, Tag}
 import models.{EventResponse, Message}
 import play.Logger
 import play.api.libs.concurrent.Execution.Implicits._
-import play.api.libs.json.{JsError, JsSuccess, Reads}
+import play.api.libs.json.{JsError, JsSuccess}
 import service.actors.IntercomActor._
 
 import scala.concurrent.duration._
@@ -133,6 +134,16 @@ class ForwardActor extends Actor {
             case _ => Logger.error("user-reach payload invalid")
           }
 
+        // Intercom dedicated event here that's not the best place for that but it's a single shot event
+        // implemented here to avoid messing the ctrl upper layers with forwarding events directly to intercom actor
+        case "intercom-users-update" =>
+          msg.payload.validate[List[VeryBasicUser]] match {
+            case userList: JsSuccess[List[VeryBasicUser]] =>
+              Logger.info("Processing users page " + (msg.payload \ "page").asOpt[String].getOrElse("unknown"))
+              forwardAndAskIntercom(BulkUserIdUpdate(userList.value), msg.event)
+
+            case e: JsError => Logger.error(s"User list invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+          }
 
         case _ => Logger.warn(s"Service ${msg.event} not implemented yet")
       }

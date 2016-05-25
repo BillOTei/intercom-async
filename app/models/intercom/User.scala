@@ -10,6 +10,8 @@ import play.api.libs.json.{JsString, Json}
 import scala.collection.JavaConverters._
 import scala.util.Try
 
+
+
 object User {
   /**
     * Deal with the java uglyness to perform some basic formatting of the intercom user
