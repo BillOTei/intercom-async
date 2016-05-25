@@ -1,6 +1,7 @@
 package models.intercom
 
 import io.intercom.api.{CompanyCollection, CustomAttribute, User => IntercomUser}
+import models.centralapp.BasicUser.VeryBasicUser
 import models.centralapp.places.Place
 import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.{User => CentralAppUser}
@@ -129,4 +130,16 @@ object User {
     )(User.apply _)
 
   implicit val jsonListReads: Reads[List[User]] = __.lazyRead(Reads.list[User](jsonReads))
+
+  /**
+    * Gets a list of users with the right user_id instead of email
+    * @param userList: the list of Intercom users
+    * @param centralAppUserList: the list of central app users
+    * @return
+    */
+  def sanitizeUserIdFromList(userList: List[User], centralAppUserList: List[VeryBasicUser]): List[User] = {
+    userList filter(u => u.optUserId.isDefined && u.optUserId.get.contains("@") && centralAppUserList.exists(_.email == u.email)) flatMap {
+      user => centralAppUserList.find(_.email == user.email).map(u => user.copy(optUserId = Some(u.centralAppId.toString)))
+    }
+  }
 }
