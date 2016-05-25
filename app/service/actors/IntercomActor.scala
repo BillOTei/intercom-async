@@ -10,13 +10,15 @@ import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.{User => CentralAppUser}
 import models.intercom._
 import models.intercom.bulk.Bulk
-import play.api.Logger
+import play.api.{Logger, cache}
 import play.api.Play.current
 import play.api.libs.json.{JsObject, Json}
 import service.actors.ForwardActor.Answer
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 object IntercomActor {
   def props = Props[IntercomActor]
@@ -81,19 +83,12 @@ class IntercomActor extends Actor {
       }
 
     case BulkUserIdUpdate(users) =>
-      HttpClient.getAllPagedFromIntercom("users", "users", sender) map {
+      getAllUsers map {
         _ map {
-          jsonUsers => {
-            implicit val needAnswer = true
-            Logger.info(jsonUsers.toString)
-            /*HttpClient.postDataToIntercomApi(
-              "bulk/users",
-              Json.toJson(Bulk.getForCompanyUserDeletion(placeId, jsonUsers)).as[JsObject],
-              sender
-            )*/
-          }
+          usersList =>
         }
       }
+
 
 
     case EventMessage(name, createdAt, user, optPlace) =>
@@ -172,4 +167,23 @@ class IntercomActor extends Actor {
 
     case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
   }
+
+  /**
+    * Get all the Intercom users from cache or API
+    * @return
+    */
+  def getAllUsers: Future[Try[List[User]]] = cache.Cache.getAs[List[User]]("intercom_users").map(l => Future.successful(Success(l))).getOrElse {
+    Logger.debug("Fetching all users from Intercom API")
+    HttpClient.getAllPagedFromIntercom("users", "users", sender) map {
+      _ map {
+        jsonUsers => {
+          val usersList = jsonUsers.flatMap(_.asOpt[User])
+          Logger.debug("Caching all Intercom users for 30mn")
+          cache.Cache.set("intercom_users", usersList, 30.minutes)
+          usersList
+        }
+      }
+    }
+  }
+
 }
