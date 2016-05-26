@@ -23,7 +23,7 @@ object User {
     * @return
     */
   def getBasicIntercomUser(user: CentralAppUser, companies: Option[List[Place]]): IntercomUser = new IntercomUser().
-    setName(user.firstName + " " + user.lastName).
+    setName(user.firstName.getOrElse("not_specified") + " " + user.lastName.getOrElse("not_specified")).
     setEmail(user.email).
     addCustomAttribute(CustomAttribute.newStringAttribute("phone", user.mobilePhone.getOrElse(""))).
     addCustomAttribute(CustomAttribute.newStringAttribute("interface_language", user.uiLang)).
@@ -60,7 +60,7 @@ object User {
     * @return
     */
   def isValid(user: CentralAppUser): Boolean = {
-    !user.firstName.isEmpty && !user.lastName.isEmpty && (user.mobilePhone.isEmpty || user.mobilePhone.get.startsWith("+")) &&
+    (user.mobilePhone.isEmpty || user.mobilePhone.get.startsWith("+")) &&
     """([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined
     //&& (user.places.isEmpty || user.places.get.map(Company.isValid).forall(_ == true))
     //&& (user.companies.isEmpty || user.companies.get.map(_.attribution.creatorCentralAppId.getOrElse(0) == user.centralAppId).forall(_ == true))
@@ -74,7 +74,7 @@ object User {
     * @return
     */
   def toJson(user: CentralAppUser, company: Option[Place]) = Json.obj(
-    "name" -> (user.firstName + " " + user.lastName),
+    "name" -> (user.firstName.getOrElse("not_specified") + " " + user.lastName.getOrElse("not_specified")),
     "user_id" -> user.centralAppId,
     "email" -> user.email,
     "custom_attributes" -> {
