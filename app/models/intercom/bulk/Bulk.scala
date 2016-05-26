@@ -1,5 +1,6 @@
 package models.intercom.bulk
 
+import models.intercom.User
 import play.api.libs.json.{JsObject, JsValue, Json, Writes}
 
 /**
@@ -47,6 +48,27 @@ object Bulk {
           )
         )
       }
+    }
+  )
+
+  /**
+    * Gets a Bulk obj for user_id update on Intercom side
+    * @param users: the list of intercom users
+    * @return
+    */
+  def getForUserIdUpdate(users: List[User]) = Bulk(
+    users map {
+      user => Item(
+        "post",
+        "user",
+        Json.obj(
+          "id" -> user.id,
+          "email" -> user.email
+        ) ++ {
+          if (user.optUserId.isDefined) Json.obj("user_id" -> user.optUserId.get)
+          else Json.obj()
+        }
+      )
     }
   )
 
