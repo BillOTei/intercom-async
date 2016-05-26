@@ -140,7 +140,7 @@ class ForwardActor extends Actor {
           msg.payload.validate[List[VeryBasicUser]] match {
             case userList: JsSuccess[List[VeryBasicUser]] =>
               Logger.info("Processing users page " + (msg.payload \ "page").asOpt[Int].map(_.toString).getOrElse("unknown"))
-              forwardAndAskIntercom(BulkUserIdUpdate(userList.value), msg.event)
+              context.actorOf(IntercomActor.props) ! BulkUserIdUpdate(userList.value)
 
             case e: JsError => Logger.error(s"User list invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
           }
