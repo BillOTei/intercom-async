@@ -85,11 +85,22 @@ class IntercomActor extends Actor {
     case BulkUserIdUpdate(users) =>
       getAllUsers map {
         _ map {
-          usersList =>
+          usersList => {
+            implicit val needAnswer = true
+            val sanitizedUsers = User.sanitizeUserIdFromList(usersList, users)
+            Logger.info(sanitizedUsers.toString)
+            HttpClient.postDataToIntercomApi(
+              "bulk/users",
+              Json.toJson(
+                Bulk.getForUserIdUpdate(
+                  sanitizedUsers
+                )
+              ).as[JsObject],
+              sender
+            )
+          }
         }
       }
-
-
 
     case EventMessage(name, createdAt, user, optPlace) =>
       if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined) {
@@ -172,18 +183,19 @@ class IntercomActor extends Actor {
     * Get all the Intercom users from cache or API
     * @return
     */
-  def getAllUsers: Future[Try[List[User]]] = cache.Cache.getAs[List[User]]("intercom_users").map(l => Future.successful(Success(l))).getOrElse {
-    Logger.debug("Fetching all users from Intercom API")
-    HttpClient.getAllPagedFromIntercom("users", "users", sender) map {
-      _ map {
-        jsonUsers => {
-          val usersList = jsonUsers.flatMap(_.asOpt[User])
-          Logger.debug("Caching all Intercom users for 30mn")
-          cache.Cache.set("intercom_users", usersList, 30.minutes)
-          usersList
+  def getAllUsers: Future[Try[List[User]]] = cache.Cache.getAs[List[User]]("intercom_users").map(l => Future.successful(Success(l))).
+      getOrElse {
+      Logger.debug("Fetching all users from Intercom API")
+      HttpClient.getAllPagedFromIntercom("users", "users", sender) map {
+        _ map {
+          jsonUsers => {
+            val usersList = jsonUsers.flatMap(_.asOpt[User])
+            Logger.debug("Caching all Intercom users for 30mn")
+            cache.Cache.set("intercom_users", usersList, 30.minutes)
+            usersList
+          }
         }
       }
     }
-  }
 
 }
