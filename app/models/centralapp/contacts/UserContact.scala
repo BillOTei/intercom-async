@@ -55,7 +55,7 @@ object UserContact extends JsonReadsConstraints {
           Some(BasicPlaceUser(
             new BasicPlace {
               override def name: String = placeName
-              override def locality: String = location
+              override def locality: Option[String] = Some(location)
               override def lead: Boolean = true
             },
             new BasicUser {

@@ -72,7 +72,7 @@ object LeadContact extends JsonReadsConstraints {
           Some(BasicPlaceUser(
             new BasicPlace {
               override def name: String = leadContact.businessName.get
-              override def locality: String = leadContact.location.get
+              override def locality: Option[String] = leadContact.location
               override def lead: Boolean = true
             },
             getBasicUser(leadContact)

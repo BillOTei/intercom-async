@@ -11,11 +11,11 @@ case class Place(
                     name: String,
                     email: Option[String],
                     chainName: Option[String],
-                    countryCode: String,
-                    locality: String,
-                    zip: String,
-                    address: String,
-                    streetNumber: String,
+                    countryCode: Option[String],
+                    locality: Option[String],
+                    zip: Option[String],
+                    address: Option[String],
+                    streetNumber: Option[String],
                     defaultLang: Option[String],
                     openingDates: Option[String],
                     landlinePhone: Option[String],
@@ -50,15 +50,15 @@ object Place {
       (JsPath \ "name").read[String] and
       (JsPath \ "email").readNullable[String] and
       (JsPath \ "chain" \ "name").readNullable[String] and
-      (JsPath \ "location" \ "translated_addresses" \ lang \ "country" \ "short_name").read[String].
-        orElse((JsPath \ "location" \ "address" \ "country" \ "short_name").read[String]) and
-      (JsPath \ "location" \ "translated_addresses" \ lang \ "locality" \ "name").read[String].
-        orElse((JsPath \ "location" \ "address" \ "locality" \ "name").read[String]) and
-      (JsPath \ "location" \ "address" \ "locality" \ "postal_code").read[String] and
-      (JsPath \ "location" \ "translated_addresses" \ lang \ "street" \ "name").read[String].
-        orElse((JsPath \ "location" \ "address" \ "street" \ "name").read[String]) and
-      (JsPath \ "location" \ "translated_addresses" \ lang \ "street_number").read[String].
-        orElse((JsPath \ "location" \ "address" \ "street_number").read[String]) and
+      (JsPath \ "location" \ "translated_addresses" \ lang \ "country" \ "short_name").readNullable[String].
+        orElse((JsPath \ "location" \ "address" \ "country" \ "short_name").readNullable[String]) and
+      (JsPath \ "location" \ "translated_addresses" \ lang \ "locality" \ "name").readNullable[String].
+        orElse((JsPath \ "location" \ "address" \ "locality" \ "name").readNullable[String]) and
+      (JsPath \ "location" \ "address" \ "locality" \ "postal_code").readNullable[String] and
+      (JsPath \ "location" \ "translated_addresses" \ lang \ "street" \ "name").readNullable[String].
+        orElse((JsPath \ "location" \ "address" \ "street" \ "name").readNullable[String]) and
+      (JsPath \ "location" \ "translated_addresses" \ lang \ "street_number").readNullable[String].
+        orElse((JsPath \ "location" \ "address" \ "street_number").readNullable[String]) and
       (JsPath \ "defaultLang").readNullable[String] and
       (JsPath \ "established").readNullable[String] and
       (JsPath \ "primary_phone" \ "international").readNullable[String] and
