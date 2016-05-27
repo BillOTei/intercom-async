@@ -51,14 +51,19 @@ object Place {
       (JsPath \ "email").readNullable[String] and
       (JsPath \ "chain" \ "name").readNullable[String] and
       (JsPath \ "location" \ "translated_addresses" \ lang \ "country" \ "short_name").readNullable[String].
-        orElse((JsPath \ "location" \ "address" \ "country" \ "short_name").readNullable[String]) and
+        orElse((JsPath \ "location" \ "address" \ "country" \ "short_name").readNullable[String]).
+        orElse((JsPath \ "location").readNullable[String]) and
       (JsPath \ "location" \ "translated_addresses" \ lang \ "locality" \ "name").readNullable[String].
-        orElse((JsPath \ "location" \ "address" \ "locality" \ "name").readNullable[String]) and
-      (JsPath \ "location" \ "address" \ "locality" \ "postal_code").readNullable[String] and
+        orElse((JsPath \ "location" \ "address" \ "locality" \ "name").readNullable[String]).
+        orElse((JsPath \ "location").readNullable[String]) and
+      (JsPath \ "location" \ "address" \ "locality" \ "postal_code").readNullable[String].
+        orElse((JsPath \ "location").readNullable[String]) and
       (JsPath \ "location" \ "translated_addresses" \ lang \ "street" \ "name").readNullable[String].
-        orElse((JsPath \ "location" \ "address" \ "street" \ "name").readNullable[String]) and
+        orElse((JsPath \ "location" \ "address" \ "street" \ "name").readNullable[String]).
+        orElse((JsPath \ "location").readNullable[String]) and
       (JsPath \ "location" \ "translated_addresses" \ lang \ "street_number").readNullable[String].
-        orElse((JsPath \ "location" \ "address" \ "street_number").readNullable[String]) and
+        orElse((JsPath \ "location" \ "address" \ "street_number").readNullable[String]).
+        orElse((JsPath \ "location").readNullable[String]) and
       (JsPath \ "defaultLang").readNullable[String] and
       (JsPath \ "established").readNullable[String] and
       (JsPath \ "primary_phone" \ "international").readNullable[String] and
