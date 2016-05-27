@@ -132,13 +132,13 @@ object User {
   implicit val jsonListReads: Reads[List[User]] = __.lazyRead(Reads.list[User](jsonReads))
 
   /**
-    * Gets a list of users with the right user_id instead of email
+    * Gets a list of users with the right user_id instead of email or nothing
     * @param userList: the list of Intercom users
     * @param centralAppUserList: the list of central app users
     * @return
     */
   def sanitizeUserIdFromList(userList: List[User], centralAppUserList: List[VeryBasicUser]): List[User] = {
-    userList filter(u => u.optUserId.isDefined && u.optUserId.get.contains("@") && centralAppUserList.exists(_.email == u.email)) flatMap {
+    userList filter(u => /*u.optUserId.isDefined && u.optUserId.get.contains("@") &&*/ centralAppUserList.exists(_.email == u.email)) flatMap {
       user => centralAppUserList.find(_.email == user.email).map(u => user.copy(optUserId = Some(u.centralAppId.toString)))
     }
   }
