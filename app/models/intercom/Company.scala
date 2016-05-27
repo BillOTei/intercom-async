@@ -24,9 +24,9 @@ object Company {
       addCustomAttribute(CustomAttribute.newStringAttribute("place_email", company.email.getOrElse(""))).
       addCustomAttribute(CustomAttribute.newBooleanAttribute("in_chain", company.chainName.isDefined)).
       addCustomAttribute(CustomAttribute.newStringAttribute("chain_name", company.chainName.getOrElse(""))).
-      addCustomAttribute(CustomAttribute.newStringAttribute("country_code", company.countryCode.getOrElse("unknown"))).
-      addCustomAttribute(CustomAttribute.newStringAttribute("locality", company.locality.getOrElse("unknown"))).
-      addCustomAttribute(CustomAttribute.newStringAttribute("zip_code", company.zip.getOrElse("unknown"))).
+      addCustomAttribute(CustomAttribute.newStringAttribute("country_code", company.countryCode.getOrElse("not_specified"))).
+      addCustomAttribute(CustomAttribute.newStringAttribute("locality", company.locality.getOrElse("not_specified"))).
+      addCustomAttribute(CustomAttribute.newStringAttribute("zip_code", company.zip.getOrElse("not_specified"))).
       addCustomAttribute(CustomAttribute.newStringAttribute("full_address", company.address + " " + company.streetNumber)).
       addCustomAttribute(CustomAttribute.newStringAttribute("default_language", company.defaultLang.getOrElse(""))).
       addCustomAttribute(CustomAttribute.newStringAttribute("opening_date", company.openingDates.getOrElse(""))).
@@ -108,10 +108,10 @@ object Company {
     } ++ {
       if (company.locality.isDefined) {
         Json.obj(
-          "country_code" -> company.countryCode.get,
+          "country_code" -> JsString(company.countryCode.getOrElse("not_specified")),
           "locality" -> company.locality.get,
-          "zip_code" -> company.zip.get,
-          "full_address" -> JsString(company.address.get + " " + company.streetNumber.get)
+          "zip_code" -> JsString(company.zip.getOrElse("not_specified")),
+          "full_address" -> JsString(company.address.getOrElse("not_specified") + " " + company.streetNumber.getOrElse("not_specified"))
         )
       } else Json.obj()
     }
@@ -136,7 +136,7 @@ object Company {
     "name" -> basicPlaceUser.place.name,
     "company_id" -> JsString("notregistered_" + java.util.UUID.randomUUID.toString),
     "custom_attributes" -> Json.obj(
-      "locality" -> JsString(basicPlaceUser.place.locality.getOrElse("unknown")),
+      "locality" -> JsString(basicPlaceUser.place.locality.getOrElse("not_specified")),
       "owner_user_email" -> JsString(basicPlaceUser.user.email),
       "lead" -> basicPlaceUser.place.lead
     )
