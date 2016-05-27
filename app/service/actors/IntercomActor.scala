@@ -207,6 +207,9 @@ class IntercomActor extends Actor {
         _ map {
           jsonUsers => {
             val usersList = jsonUsers.flatMap(_.asOpt[User])
+            if (usersList.length != usersList.groupBy(_.email).map(_._2.head).toList.length) {
+              Logger.info(s"Some duplicated user emails were found into list: ${usersList.toString}")
+            }
             Logger.debug("Caching all Intercom users for 30mn")
             cache.Cache.set("intercom_users", usersList, 30.minutes)
             usersList
