@@ -175,7 +175,10 @@ class ForwardActor extends Actor {
     Logger.debug(s"Forwarding $eventName to intercom...")
     (context.actorOf(IntercomActor.props) ? message).mapTo[EventResponse].onComplete {
       case Success(response) => Logger.info(response.body)
-      case Failure(err) => Logger.error(s"ForwardActor to Intercom did not succeed: ${err.getMessage}", err)
+      case Failure(err) => Logger.error(
+        s"ForwardActor to Intercom did not succeed: ${err.getMessage} for message: ${message.toString}",
+        err
+      )
     }
   }
 }
