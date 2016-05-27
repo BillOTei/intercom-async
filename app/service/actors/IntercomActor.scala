@@ -6,7 +6,7 @@ import models.centralapp.BasicUser
 import models.centralapp.BasicUser.VeryBasicUser
 import models.centralapp.contacts.LeadContact
 import models.centralapp.places.{BasicPlace, Place}
-import models.centralapp.relationships.BasicPlaceUser
+import models.centralapp.relationships.{BasicPlaceUser, PlaceUser}
 import models.centralapp.users.{User => CentralAppUser}
 import models.intercom._
 import models.intercom.bulk.Bulk
@@ -42,6 +42,8 @@ object IntercomActor {
   case class DeleteAllPlaceUsersMessage(ownerEmail: String, placeId: Long) extends IntercomMessage
 
   case class BulkUserIdUpdate(users: List[VeryBasicUser]) extends IntercomMessage
+
+  case class BulkPlaceUserUpdate(placeUsers: List[PlaceUser]) extends IntercomMessage
 }
 
 class IntercomActor extends Actor {
@@ -88,7 +90,7 @@ class IntercomActor extends Actor {
           usersList => {
             implicit val needAnswer = true
             val sanitizedUsers = User.sanitizeUserIdFromList(usersList, users)
-            Logger.info(sanitizedUsers.toString)
+            Logger.debug(sanitizedUsers.toString)
             HttpClient.postDataToIntercomApi(
               "bulk/users",
               Json.toJson(
@@ -101,6 +103,21 @@ class IntercomActor extends Actor {
           }
         }
       }
+
+    case BulkPlaceUserUpdate(placeUsers) =>
+      val jsonPlaceUsers = placeUsers map {
+        pu => User.toJson(pu.user, Some(pu.place))
+      }
+      Logger.debug(jsonPlaceUsers.toString)
+      HttpClient.postDataToIntercomApi(
+        "bulk/users",
+        Json.toJson(
+          Bulk.getForFullUserUpdate(
+            jsonPlaceUsers
+          )
+        ).as[JsObject],
+        sender
+      )
 
     case EventMessage(name, createdAt, user, optPlace) =>
       if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined) {
@@ -129,7 +146,7 @@ class IntercomActor extends Actor {
                 BasicPlaceUser(
                   new BasicPlace {
                     override def name: String = businessName
-                    override def locality: String = location
+                    override def locality: Option[String] = Some(location)
                     override def lead: Boolean = true
                   },
                   LeadContact.getBasicUser(leadContact)

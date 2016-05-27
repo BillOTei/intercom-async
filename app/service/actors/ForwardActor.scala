@@ -6,7 +6,7 @@ import akka.util.Timeout
 import models.centralapp.BasicUser
 import models.centralapp.BasicUser.VeryBasicUser
 import models.centralapp.places.Place
-import models.centralapp.relationships.BasicPlaceUser
+import models.centralapp.relationships.{BasicPlaceUser, PlaceUser}
 import models.centralapp.users.{User, UserReach}
 import models.intercom.{ConversationInit, IntercomMessage, Tag}
 import models.{EventResponse, Message}
@@ -143,6 +143,17 @@ class ForwardActor extends Actor {
               context.actorOf(IntercomActor.props) ! BulkUserIdUpdate(userList.value)
 
             case e: JsError => Logger.error(s"User list invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+          }
+
+        // Update multiple place-users at a time
+        case "placeusers-update" =>
+          implicit val contextPayload = msg.payload
+          (msg.payload \ "placeusers").validate[List[PlaceUser]] match {
+            case placeUserList: JsSuccess[List[PlaceUser]] =>
+              Logger.info("Processing placeusers page " + (msg.payload \ "page").asOpt[Int].map(_.toString).getOrElse("unknown"))
+              forwardAndAskIntercom(BulkPlaceUserUpdate(placeUserList.value), msg.event)
+
+            case e: JsError => Logger.error(s"PlaceUser list invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
           }
 
         case _ => Logger.warn(s"Service ${msg.event} not implemented yet")

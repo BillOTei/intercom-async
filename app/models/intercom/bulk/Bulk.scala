@@ -72,4 +72,19 @@ object Bulk {
     }
   )
 
+  /**
+    * Gets a Bulk for a full update of user including the companies
+    * @param placeUsers: the place user data
+    * @return
+    */
+  def getForFullUserUpdate(placeUsers: List[JsObject]) = Bulk(
+    placeUsers map {
+      pu => Item(
+        "post",
+        "user",
+        pu
+      )
+    }
+  )
+
 }
