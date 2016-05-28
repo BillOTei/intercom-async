@@ -122,8 +122,12 @@ object Company {
       "custom_attributes" -> customAttributes,
       "plan" -> JsString(company.plan.map(_.name).getOrElse(""))
     ) ++ {
-      if (company.signupDate.isDefined) Json.obj("remote_created_at" -> DateTime.parse(company.signupDate.get).getMillis / 1000)
-      else Json.obj()
+      if (company.signupDate.isDefined) {
+        Json.obj(
+          "remote_created_at" -> DateTime.parse(company.signupDate.get).getMillis / 1000,
+          "created_at" -> DateTime.parse(company.signupDate.get).getMillis / 1000
+        )
+      } else Json.obj()
     }
   }
 
