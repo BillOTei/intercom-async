@@ -80,13 +80,13 @@ object User {
     "custom_attributes" -> {
       Json.obj(
         "phone" -> JsString(user.mobilePhone.getOrElse("")),
-        "interface_language" -> user.uiLang,
-        //"browser_language" -> JsString(user.browserLang.getOrElse("")),
+        /*"interface_language" -> user.uiLang,
+        "browser_language" -> JsString(user.browserLang.getOrElse("")),
         "nb_of_pending_places" -> Json.toJson(user.nbOfPendingPlaces.getOrElse(0)),
         "nb_of_managed_places" -> Json.toJson(user.nbOfManagedPlaces.getOrElse(0)),
         "nb_of_viewable_places" -> Json.toJson(user.nbOfViewablePlaces.getOrElse(0)),
         "nb_of_owned_places" -> Json.toJson(user.nbOfOwnedPlaces.getOrElse(0)),
-        "centralapp_id" -> user.centralAppId,
+        "centralapp_id" -> user.centralAppId,*/
         "confirmed" -> user.enabled
       ) ++ {
         if (user.lastSeenDate.isDefined) Json.obj("last_seen_date_db" -> user.lastSeenDate.get / 1000)
