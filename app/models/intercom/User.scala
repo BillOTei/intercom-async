@@ -67,13 +67,15 @@ object User {
   }
 
   /**
-    * The user to json for ws post service mainly
+    * The user to json for ws post service mainly,
+    * company is embended for update and creation
     *
     * @param user: the user reference obj
     * @param company: the optional company i.e. place on centralapp to be added to intercom
+    * @param removeRelationship: the boolean to remove a company from user on intercom
     * @return
     */
-  def toJson(user: CentralAppUser, company: Option[Place]) = Json.obj(
+  def toJson(user: CentralAppUser, company: Option[Place], removeRelationship: Boolean = false) = Json.obj(
     "name" -> (user.firstName.getOrElse("not_specified") + " " + user.lastName.getOrElse("not_specified")),
     "user_id" -> user.centralAppId,
     "email" -> user.email,
@@ -94,7 +96,7 @@ object User {
       }
     }
   ) ++ {
-    if (company.isDefined) Json.obj("companies" -> Json.arr(Company.toJson(company.get)))
+    if (company.isDefined) Json.obj("companies" -> Json.arr(Company.toJson(company.get, removeRelationship)))
     else Json.obj()
   } ++ {
     if (user.signupDate.isDefined) Json.obj("signed_up_at" -> user.signupDate.get / 1000)

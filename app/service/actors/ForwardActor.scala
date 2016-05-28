@@ -57,6 +57,17 @@ class ForwardActor extends Actor {
           case e: JsError => Logger.error(s"Place invalid ${e.errors.mkString(";")}")
         }
 
+        case "placeuser-deletion" =>
+          implicit val contextPayload = msg.payload
+          msg.payload.validate[PlaceUser] match {
+            case placeUser: JsSuccess[PlaceUser] => forwardAndAskIntercom(
+              PlaceUserMessage(placeUser.value.user, placeUser.value.place, removeRelationship = true),
+              msg.event
+            )
+
+            case e: JsError => Logger.error(s"PlaceUser invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+          }
+
         // On place update
         case "place-update" => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
           case p: JsSuccess[Place] => forwardAndAskIntercom(PlaceMessage(p.value), msg.event)

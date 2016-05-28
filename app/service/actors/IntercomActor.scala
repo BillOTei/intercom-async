@@ -23,7 +23,7 @@ import scala.concurrent.duration._
 object IntercomActor {
   def props = Props[IntercomActor]
 
-  case class PlaceUserMessage(user: CentralAppUser, place: Place) extends IntercomMessage
+  case class PlaceUserMessage(user: CentralAppUser, place: Place, removeRelationship: Boolean = false) extends IntercomMessage
 
   case class PlaceMessage(place: Place) extends IntercomMessage
 
@@ -53,11 +53,11 @@ class IntercomActor extends Actor {
   io.intercom.api.Intercom.setAppID(current.configuration.getString("intercom.appid").getOrElse(""))
 
   def receive = {
-    case PlaceUserMessage(user: CentralAppUser, place: Place) => (User.isValid(user), Company.isValid(place)) match {
+    case PlaceUserMessage(user: CentralAppUser, place: Place, removeRelationship) => (User.isValid(user), Company.isValid(place)) match {
       case (false, false) => sender ! Failure(new Throwable(s"Intercom user & company invalid: ${user.toString} ${place.toString}"))
       case (true, false) => sender ! Failure(new Throwable(s"Intercom company invalid: ${place.toString}"))
       case (false, true) => sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
-      case _ => HttpClient.postDataToIntercomApi("users", User.toJson(user, Some(place)), sender)
+      case _ => HttpClient.postDataToIntercomApi("users", User.toJson(user, Some(place), removeRelationship), sender)
     }
 
     case PlaceMessage(place: Place) =>

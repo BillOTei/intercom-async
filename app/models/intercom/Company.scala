@@ -76,9 +76,10 @@ object Company {
     * The company to json obj
     *
     * @param company: the intercom company, meaning a place for centralapp
+    * @param remove: remove the company (i.e. remove the relationship with user and could make it unvisible to UI if last one)
     * @return
     */
-  def toJson(company: Place) = {
+  def toJson(company: Place, remove: Boolean = false) = {
     val customAttributes = Json.obj(
       "place_id" -> company.centralAppId,
       "place_email" -> company.email,
@@ -130,6 +131,9 @@ object Company {
       } else {
         Json.obj()
       }
+    } ++ {
+      if (remove) Json.obj("remove" -> true)
+      else Json.obj()
     }
   }
 
