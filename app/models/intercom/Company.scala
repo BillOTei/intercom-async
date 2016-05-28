@@ -127,7 +127,9 @@ object Company {
           "remote_created_at" -> DateTime.parse(company.signupDate.get).getMillis / 1000,
           "created_at" -> DateTime.parse(company.signupDate.get).getMillis / 1000
         )
-      } else Json.obj()
+      } else {
+        Json.obj()
+      }
     }
   }
 
