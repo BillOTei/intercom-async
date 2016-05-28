@@ -81,6 +81,17 @@ object Place {
         }
       } and
       (JsPath \ "plan").readNullable[Plan]
-      )(Place.apply _)
+      )(
+      (id, name, email, chainName, countryCode, locality, zip, address, streetNumber, _,
+       openingDates, landlinePhone, mobilePhone, website, categories, signupDate,
+       verificationStatus, completionScore, nbOfActionsToTake, billing, attribution, plan) => {
+
+        // Ugly but quick fix for no place language pushed
+        Place(id, name, email, chainName, countryCode, locality, zip, address, streetNumber, Some(lang),
+          openingDates, landlinePhone, mobilePhone, website, categories, signupDate,
+          verificationStatus, completionScore, nbOfActionsToTake, billing, attribution, plan)
+
+      }
+    )
   }
 }
