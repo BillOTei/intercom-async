@@ -2,7 +2,7 @@ package models.intercom
 
 import io.intercom.api.{CustomAttribute, Company => IntercomCompany}
 import models.centralapp.Category
-import models.centralapp.places.{BasicPlace, Place}
+import models.centralapp.places.Place
 import models.centralapp.relationships.BasicPlaceUser
 import org.joda.time.DateTime
 import play.api.libs.json.{JsString, Json}
@@ -24,9 +24,9 @@ object Company {
       addCustomAttribute(CustomAttribute.newStringAttribute("place_email", company.email.getOrElse(""))).
       addCustomAttribute(CustomAttribute.newBooleanAttribute("in_chain", company.chainName.isDefined)).
       addCustomAttribute(CustomAttribute.newStringAttribute("chain_name", company.chainName.getOrElse(""))).
-      addCustomAttribute(CustomAttribute.newStringAttribute("country_code", company.countryCode)).
-      addCustomAttribute(CustomAttribute.newStringAttribute("locality", company.locality)).
-      addCustomAttribute(CustomAttribute.newStringAttribute("zip_code", company.zip)).
+      addCustomAttribute(CustomAttribute.newStringAttribute("country_code", company.countryCode.getOrElse("not_specified"))).
+      addCustomAttribute(CustomAttribute.newStringAttribute("locality", company.locality.getOrElse("not_specified"))).
+      addCustomAttribute(CustomAttribute.newStringAttribute("zip_code", company.zip.getOrElse("not_specified"))).
       addCustomAttribute(CustomAttribute.newStringAttribute("full_address", company.address + " " + company.streetNumber)).
       addCustomAttribute(CustomAttribute.newStringAttribute("default_language", company.defaultLang.getOrElse(""))).
       addCustomAttribute(CustomAttribute.newStringAttribute("opening_date", company.openingDates.getOrElse(""))).
@@ -66,8 +66,7 @@ object Company {
     * @return
     */
   def isValid(company: Place): Boolean = {
-    company.centralAppId > 0 && !company.name.isEmpty && !company.countryCode.isEmpty && !company.locality.isEmpty &&
-    !company.zip.isEmpty && !company.address.isEmpty && (company.email.isEmpty || """([\w\.]+)@([\w\.]+)""".r.unapplySeq(company.email.get).isDefined)
+    company.centralAppId > 0 && !company.name.isEmpty && (company.email.isEmpty || """([\w\.]+)@([\w\.]+)""".r.unapplySeq(company.email.get).isDefined)
     /*&&
     company.attribution.creatorCentralAppId.isDefined &&
     (company.attribution.creatorEmail.isEmpty || """([\w\.]+)@([\w\.]+)""".r.unapplySeq(company.attribution.creatorEmail.get).isDefined)*/
@@ -77,18 +76,15 @@ object Company {
     * The company to json obj
     *
     * @param company: the intercom company, meaning a place for centralapp
+    * @param remove: remove the company (i.e. remove the relationship with user and could make it unvisible to UI if last one)
     * @return
     */
-  def toJson(company: Place) = {
+  def toJson(company: Place, remove: Boolean = false) = {
     val customAttributes = Json.obj(
       "place_id" -> company.centralAppId,
       "place_email" -> company.email,
       "in_chain" -> company.chainName.isDefined,
       "chain_name" -> JsString(company.chainName.getOrElse("")),
-      "country_code" -> company.countryCode,
-      "locality" -> company.locality,
-      "zip_code" -> company.zip,
-      "full_address" -> JsString(company.address + " " + company.streetNumber),
       "default_language" -> JsString(company.defaultLang.getOrElse("")),
       "primary_phone" -> JsString(company.landlinePhone.getOrElse("")),
       "mobile_phone" -> JsString(company.mobilePhone.getOrElse("")),
@@ -110,6 +106,15 @@ object Company {
     } ++ {
       if (company.openingDates.isDefined) Json.obj("opening_date" -> DateTime.parse(company.openingDates.get).getMillis / 1000)
       else Json.obj()
+    } ++ {
+      if (company.locality.isDefined) {
+        Json.obj(
+          "country_code" -> JsString(company.countryCode.getOrElse("not_specified")),
+          "locality" -> company.locality.get,
+          "zip_code" -> JsString(company.zip.getOrElse("not_specified")),
+          "full_address" -> JsString(company.address.getOrElse("not_specified") + " " + company.streetNumber.getOrElse("not_specified"))
+        )
+      } else Json.obj()
     }
 
     Json.obj(
@@ -118,7 +123,16 @@ object Company {
       "custom_attributes" -> customAttributes,
       "plan" -> JsString(company.plan.map(_.name).getOrElse(""))
     ) ++ {
-      if (company.signupDate.isDefined) Json.obj("remote_created_at" -> DateTime.parse(company.signupDate.get).getMillis / 1000)
+      if (company.signupDate.isDefined) {
+        Json.obj(
+          "remote_created_at" -> DateTime.parse(company.signupDate.get).getMillis / 1000,
+          "created_at" -> DateTime.parse(company.signupDate.get).getMillis / 1000
+        )
+      } else {
+        Json.obj()
+      }
+    } ++ {
+      if (remove) Json.obj("remove" -> true)
       else Json.obj()
     }
   }
@@ -132,7 +146,7 @@ object Company {
     "name" -> basicPlaceUser.place.name,
     "company_id" -> JsString("notregistered_" + java.util.UUID.randomUUID.toString),
     "custom_attributes" -> Json.obj(
-      "locality" -> basicPlaceUser.place.locality,
+      "locality" -> JsString(basicPlaceUser.place.locality.getOrElse("not_specified")),
       "owner_user_email" -> JsString(basicPlaceUser.user.email),
       "lead" -> basicPlaceUser.place.lead
     )

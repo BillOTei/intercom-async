@@ -1,5 +1,7 @@
 package models.centralapp.places
 
+import java.util
+
 import models.centralapp.{Attribution, Plan}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -9,11 +11,11 @@ case class Place(
                     name: String,
                     email: Option[String],
                     chainName: Option[String],
-                    countryCode: String,
-                    locality: String,
-                    zip: String,
-                    address: String,
-                    streetNumber: String,
+                    countryCode: Option[String],
+                    locality: Option[String],
+                    zip: Option[String],
+                    address: Option[String],
+                    streetNumber: Option[String],
                     defaultLang: Option[String],
                     openingDates: Option[String],
                     landlinePhone: Option[String],
@@ -30,6 +32,12 @@ case class Place(
                   ) extends BasicPlace
 
 object Place {
+  val REL_CENTRALAPP_ADMIN = "CA"
+  val REL_OWNER = "O"
+  val REL_ADMIN = "A"
+  val REL_VIEWER = "V"
+  val CAN_DELETE_REL_TYPES = util.Arrays.asList(REL_CENTRALAPP_ADMIN, REL_OWNER)
+
   def placeReads(payload: JsValue): Reads[Place] = {
     val lang = (payload \ "place" \ "languages").asOpt[List[JsObject]].
       map(_.filter(lg => (lg \ "default").asOpt[Boolean].getOrElse(false))).
@@ -42,15 +50,20 @@ object Place {
       (JsPath \ "name").read[String] and
       (JsPath \ "email").readNullable[String] and
       (JsPath \ "chain" \ "name").readNullable[String] and
-      (JsPath \ "location" \ "translated_addresses" \ lang \ "country" \ "short_name").read[String].
-        orElse((JsPath \ "location" \ "address" \ "country" \ "short_name").read[String]) and
-      (JsPath \ "location" \ "translated_addresses" \ lang \ "locality" \ "name").read[String].
-        orElse((JsPath \ "location" \ "address" \ "locality" \ "name").read[String]) and
-      (JsPath \ "location" \ "address" \ "locality" \ "postal_code").read[String] and
-      (JsPath \ "location" \ "translated_addresses" \ lang \ "street" \ "name").read[String].
-        orElse((JsPath \ "location" \ "address" \ "street" \ "name").read[String]) and
-      (JsPath \ "location" \ "translated_addresses" \ lang \ "street_number").read[String].
-        orElse((JsPath \ "location" \ "address" \ "street_number").read[String]) and
+      (JsPath \ "location" \ "translated_addresses" \ lang \ "country" \ "short_name").readNullable[String].
+        orElse((JsPath \ "location" \ "address" \ "country" \ "short_name").readNullable[String]).
+        orElse((JsPath \ "location").readNullable[String]) and
+      (JsPath \ "location" \ "translated_addresses" \ lang \ "locality" \ "name").readNullable[String].
+        orElse((JsPath \ "location" \ "address" \ "locality" \ "name").readNullable[String]).
+        orElse((JsPath \ "location").readNullable[String]) and
+      (JsPath \ "location" \ "address" \ "locality" \ "postal_code").readNullable[String].
+        orElse((JsPath \ "location").readNullable[String]) and
+      (JsPath \ "location" \ "translated_addresses" \ lang \ "street" \ "name").readNullable[String].
+        orElse((JsPath \ "location" \ "address" \ "street" \ "name").readNullable[String]).
+        orElse((JsPath \ "location").readNullable[String]) and
+      (JsPath \ "location" \ "translated_addresses" \ lang \ "street_number").readNullable[String].
+        orElse((JsPath \ "location" \ "address" \ "street_number").readNullable[String]).
+        orElse((JsPath \ "location").readNullable[String]) and
       (JsPath \ "defaultLang").readNullable[String] and
       (JsPath \ "established").readNullable[String] and
       (JsPath \ "primary_phone" \ "international").readNullable[String] and
@@ -68,6 +81,17 @@ object Place {
         }
       } and
       (JsPath \ "plan").readNullable[Plan]
-      )(Place.apply _)
+      )(
+      (id, name, email, chainName, countryCode, locality, zip, address, streetNumber, _,
+       openingDates, landlinePhone, mobilePhone, website, categories, signupDate,
+       verificationStatus, completionScore, nbOfActionsToTake, billing, attribution, plan) => {
+
+        // Ugly but quick fix for no place language pushed
+        Place(id, name, email, chainName, countryCode, locality, zip, address, streetNumber, Some(lang),
+          openingDates, landlinePhone, mobilePhone, website, categories, signupDate,
+          verificationStatus, completionScore, nbOfActionsToTake, billing, attribution, plan)
+
+      }
+    )
   }
 }

@@ -3,36 +3,47 @@ package service.actors
 import akka.actor.{Actor, Props}
 import helpers.HttpClient
 import models.centralapp.BasicUser
+import models.centralapp.BasicUser.VeryBasicUser
 import models.centralapp.contacts.LeadContact
 import models.centralapp.places.{BasicPlace, Place}
-import models.centralapp.relationships.BasicPlaceUser
+import models.centralapp.relationships.{BasicPlaceUser, PlaceUser}
 import models.centralapp.users.{User => CentralAppUser}
 import models.intercom._
+import models.intercom.bulk.Bulk
+import play.api.{Logger, cache}
 import play.api.Play.current
 import play.api.libs.json.{JsObject, Json}
 import service.actors.ForwardActor.Answer
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 object IntercomActor {
   def props = Props[IntercomActor]
 
-  case class PlaceUserMessage(user: CentralAppUser, place: Place)
+  case class PlaceUserMessage(user: CentralAppUser, place: Place, removeRelationship: Boolean = false) extends IntercomMessage
 
-  case class PlaceMessage(place: Place)
+  case class PlaceMessage(place: Place) extends IntercomMessage
 
-  case class BasicPlaceUserMessage(placeUser: BasicPlaceUser)
+  case class BasicPlaceUserMessage(placeUser: BasicPlaceUser) extends IntercomMessage
 
-  case class LeadMessage(user: BasicUser, optPlaceUser: Option[BasicPlaceUser] = None)
+  case class LeadMessage(user: BasicUser, optPlaceUser: Option[BasicPlaceUser] = None) extends IntercomMessage
 
-  case class UserMessage(user: CentralAppUser)
+  case class UserMessage(user: CentralAppUser) extends IntercomMessage
 
-  case class TagMessage(tag: Tag)
+  case class TagMessage(tag: Tag) extends IntercomMessage
 
-  case class EventMessage(name: String, createdAt: Long, user: CentralAppUser, optPlace: Option[Place])
+  case class EventMessage(name: String, createdAt: Long, user: CentralAppUser, optPlace: Option[Place]) extends IntercomMessage
 
-  case class ConversationInitMessage(conversationInit: ConversationInit)
+  case class ConversationInitMessage(conversationInit: ConversationInit) extends IntercomMessage
+
+  case class DeleteAllPlaceUsersMessage(ownerEmail: String, placeId: Long) extends IntercomMessage
+
+  case class BulkUserIdUpdate(users: List[VeryBasicUser]) extends IntercomMessage
+
+  case class BulkPlaceUserUpdate(placeUsers: List[PlaceUser]) extends IntercomMessage
 }
 
 class IntercomActor extends Actor {
@@ -42,11 +53,11 @@ class IntercomActor extends Actor {
   io.intercom.api.Intercom.setAppID(current.configuration.getString("intercom.appid").getOrElse(""))
 
   def receive = {
-    case PlaceUserMessage(user: CentralAppUser, place: Place) => (User.isValid(user), Company.isValid(place)) match {
+    case PlaceUserMessage(user: CentralAppUser, place: Place, removeRelationship) => (User.isValid(user), Company.isValid(place)) match {
       case (false, false) => sender ! Failure(new Throwable(s"Intercom user & company invalid: ${user.toString} ${place.toString}"))
       case (true, false) => sender ! Failure(new Throwable(s"Intercom company invalid: ${place.toString}"))
       case (false, true) => sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
-      case _ => HttpClient.postDataToIntercomApi("users", User.toJson(user, Some(place)), sender)
+      case _ => HttpClient.postDataToIntercomApi("users", User.toJson(user, Some(place), removeRelationship), sender)
     }
 
     case PlaceMessage(place: Place) =>
@@ -56,6 +67,57 @@ class IntercomActor extends Actor {
     case UserMessage(user: CentralAppUser) =>
       if (User.isValid(user)) HttpClient.postDataToIntercomApi("users", User.toJson(user, None), sender)
       else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
+
+    case DeleteAllPlaceUsersMessage(ownerEmail, placeId) =>
+      // No way of doing that in one go with Intercom API,
+      // First fetch all the users belonging to this place then update each one in a bulk
+      HttpClient.getAllPagedFromIntercom("companies", "users", sender, "company_id" -> placeId.toString, "type" -> "user") map {
+        _ map {
+          jsonUsers => {
+            implicit val needAnswer = true
+            HttpClient.postDataToIntercomApi(
+              "bulk/users",
+              Json.toJson(Bulk.getForCompanyUserDeletion(placeId, jsonUsers)).as[JsObject],
+              sender
+            )
+          }
+        }
+      }
+
+    case BulkUserIdUpdate(users) =>
+      getAllUsers map {
+        _ map {
+          usersList => {
+            implicit val needAnswer = true
+            val sanitizedUsers = User.sanitizeUserIdFromList(usersList, users)
+            Logger.debug(sanitizedUsers.toString)
+            HttpClient.postDataToIntercomApi(
+              "bulk/users",
+              Json.toJson(
+                Bulk.getForUserIdUpdate(
+                  sanitizedUsers
+                )
+              ).as[JsObject],
+              sender
+            )
+          }
+        }
+      }
+
+    case BulkPlaceUserUpdate(placeUsers) =>
+      val jsonPlaceUsers = placeUsers map {
+        pu => User.toJson(pu.user, Some(pu.place))
+      }
+      Logger.debug(jsonPlaceUsers.toString)
+      HttpClient.postDataToIntercomApi(
+        "bulk/users",
+        Json.toJson(
+          Bulk.getForFullUserUpdate(
+            jsonPlaceUsers
+          )
+        ).as[JsObject],
+        sender
+      )
 
     case EventMessage(name, createdAt, user, optPlace) =>
       if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined) {
@@ -84,7 +146,7 @@ class IntercomActor extends Actor {
                 BasicPlaceUser(
                   new BasicPlace {
                     override def name: String = businessName
-                    override def locality: String = location
+                    override def locality: Option[String] = Some(location)
                     override def lead: Boolean = true
                   },
                   LeadContact.getBasicUser(leadContact)
@@ -133,4 +195,27 @@ class IntercomActor extends Actor {
 
     case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
   }
+
+  /**
+    * Get all the Intercom users from cache or API
+    * @return
+    */
+  def getAllUsers: Future[Try[List[User]]] = cache.Cache.getAs[List[User]]("intercom_users").map(l => Future.successful(Success(l))).
+      getOrElse {
+      Logger.debug("Fetching all users from Intercom API")
+      HttpClient.getAllPagedFromIntercom("users", "users", sender) map {
+        _ map {
+          jsonUsers => {
+            val usersList = jsonUsers.flatMap(_.asOpt[User])
+            if (usersList.length != usersList.groupBy(_.email).map(_._2.head).toList.length) {
+              Logger.info(s"Some duplicated user emails were found into list: ${usersList.toString}")
+            }
+            Logger.debug("Caching all Intercom users for 30mn")
+            cache.Cache.set("intercom_users", usersList, 30.minutes)
+            usersList
+          }
+        }
+      }
+    }
+
 }
