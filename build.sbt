@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-stream" % "2.4.2",
   "com.typesafe.akka" %% "akka-slf4j" % "2.4.0",
   "io.intercom" % "intercom-java" % "1.3.1",
+  "org.codehaus.janino" % "janino" % "2.7.8",
   "com.getsentry.raven" % "raven-logback" % "7.2.2",
   "io.swagger" %% "swagger-play2" % "1.5.2",
   "io.swagger" % "swagger-parser" % "1.0.16"

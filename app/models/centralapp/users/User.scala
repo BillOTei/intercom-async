@@ -6,8 +6,8 @@ import play.api.libs.json._
 
 case class User(
                  centralAppId: Long,
-                 firstName: String,
-                 lastName: String,
+                 firstName: Option[String],
+                 lastName: Option[String],
                  mobilePhone: Option[String],
                  email: String,
                  uiLang: String = "en",
@@ -29,8 +29,8 @@ case class User(
 object User {
   implicit val userReads: Reads[User] = (
     (JsPath \ "id").read[Long] and
-    (JsPath \ "firstname").read[String] and
-    (JsPath \ "lastname").read[String] and
+    (JsPath \ "firstname").readNullable[String] and
+    (JsPath \ "lastname").readNullable[String] and
     (JsPath \ "phone" \ "international").readNullable[String] and
     (JsPath \ "email").read[String] and
     (JsPath \ "language" \ "code").read[String] and

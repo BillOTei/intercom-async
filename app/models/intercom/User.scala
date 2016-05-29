@@ -1,14 +1,17 @@
 package models.intercom
 
 import io.intercom.api.{CompanyCollection, CustomAttribute, User => IntercomUser}
+import models.centralapp.BasicUser.VeryBasicUser
 import models.centralapp.places.Place
 import models.centralapp.relationships.BasicPlaceUser
 import models.centralapp.users.{User => CentralAppUser}
-import org.joda.time.DateTime
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 import scala.collection.JavaConverters._
 import scala.util.Try
+
+case class User(id: String, email: String, optUserId: Option[String])
 
 object User {
   /**
@@ -20,7 +23,7 @@ object User {
     * @return
     */
   def getBasicIntercomUser(user: CentralAppUser, companies: Option[List[Place]]): IntercomUser = new IntercomUser().
-    setName(user.firstName + " " + user.lastName).
+    setName(user.firstName.getOrElse("not_specified") + " " + user.lastName.getOrElse("not_specified")).
     setEmail(user.email).
     addCustomAttribute(CustomAttribute.newStringAttribute("phone", user.mobilePhone.getOrElse(""))).
     addCustomAttribute(CustomAttribute.newStringAttribute("interface_language", user.uiLang)).
@@ -57,32 +60,35 @@ object User {
     * @return
     */
   def isValid(user: CentralAppUser): Boolean = {
-    !user.firstName.isEmpty && !user.lastName.isEmpty && (user.mobilePhone.isEmpty || user.mobilePhone.get.startsWith("+")) &&
+    (user.mobilePhone.isEmpty || user.mobilePhone.get.startsWith("+")) &&
     """([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined
     //&& (user.places.isEmpty || user.places.get.map(Company.isValid).forall(_ == true))
     //&& (user.companies.isEmpty || user.companies.get.map(_.attribution.creatorCentralAppId.getOrElse(0) == user.centralAppId).forall(_ == true))
   }
 
   /**
-    * The user to json for ws post service mainly
+    * The user to json for ws post service mainly,
+    * company is embended for update and creation
     *
     * @param user: the user reference obj
     * @param company: the optional company i.e. place on centralapp to be added to intercom
+    * @param removeRelationship: the boolean to remove a company from user on intercom
     * @return
     */
-  def toJson(user: CentralAppUser, company: Option[Place]) = Json.obj(
-    "name" -> (user.firstName + " " + user.lastName),
+  def toJson(user: CentralAppUser, company: Option[Place], removeRelationship: Boolean = false) = Json.obj(
+    "name" -> (user.firstName.getOrElse("not_specified") + " " + user.lastName.getOrElse("not_specified")),
+    "user_id" -> user.centralAppId,
     "email" -> user.email,
     "custom_attributes" -> {
       Json.obj(
         "phone" -> JsString(user.mobilePhone.getOrElse("")),
-        "interface_language" -> user.uiLang,
-        //"browser_language" -> JsString(user.browserLang.getOrElse("")),
+        /*"interface_language" -> user.uiLang,
+        "browser_language" -> JsString(user.browserLang.getOrElse("")),
         "nb_of_pending_places" -> Json.toJson(user.nbOfPendingPlaces.getOrElse(0)),
         "nb_of_managed_places" -> Json.toJson(user.nbOfManagedPlaces.getOrElse(0)),
         "nb_of_viewable_places" -> Json.toJson(user.nbOfViewablePlaces.getOrElse(0)),
         "nb_of_owned_places" -> Json.toJson(user.nbOfOwnedPlaces.getOrElse(0)),
-        "centralapp_id" -> user.centralAppId,
+        "centralapp_id" -> user.centralAppId,*/
         "confirmed" -> user.enabled
       ) ++ {
         if (user.lastSeenDate.isDefined) Json.obj("last_seen_date_db" -> user.lastSeenDate.get / 1000)
@@ -90,7 +96,7 @@ object User {
       }
     }
   ) ++ {
-    if (company.isDefined) Json.obj("companies" -> Json.arr(Company.toJson(company.get)))
+    if (company.isDefined) Json.obj("companies" -> Json.arr(Company.toJson(company.get, removeRelationship)))
     else Json.obj()
   } ++ {
     if (user.signupDate.isDefined) Json.obj("signed_up_at" -> user.signupDate.get / 1000)
@@ -117,5 +123,25 @@ object User {
       )
     )
     else Json.obj()
+  }
+
+  implicit val jsonReads: Reads[User] = (
+    (__ \ "id").read[String] and
+      (__ \ "email").read[String] and
+      (__ \ "user_id").readNullable[String]
+    )(User.apply _)
+
+  implicit val jsonListReads: Reads[List[User]] = __.lazyRead(Reads.list[User](jsonReads))
+
+  /**
+    * Gets a list of users with the right user_id instead of email or nothing
+    * @param userList: the list of Intercom users
+    * @param centralAppUserList: the list of central app users
+    * @return
+    */
+  def sanitizeUserIdFromList(userList: List[User], centralAppUserList: List[VeryBasicUser]): List[User] = {
+    userList filter(u => /*u.optUserId.isDefined && u.optUserId.get.contains("@") &&*/ centralAppUserList.exists(_.email == u.email)) flatMap {
+      user => centralAppUserList.find(_.email == user.email).map(u => user.copy(optUserId = Some(u.centralAppId.toString)))
+    }
   }
 }

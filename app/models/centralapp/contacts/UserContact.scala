@@ -1,6 +1,6 @@
 package models.centralapp.contacts
 
-import models.Message
+import models.{JsonReadsConstraints, Message}
 import models.centralapp.BasicUser
 import models.centralapp.places.BasicPlace
 import models.centralapp.relationships.BasicPlaceUser
@@ -13,7 +13,7 @@ import service.actors.ForwardActor
 import service.actors.ForwardActor.Forward
 
 case class UserContact(
-                        userId: Long,
+                        userId: Option[Long],
                         token: Option[String],
                         subject: String,
                         message: Option[String],
@@ -22,18 +22,18 @@ case class UserContact(
                         location: Option[String]
                       ) extends ContactRequest
 
-object UserContact {
+object UserContact extends JsonReadsConstraints {
   val MSG_UNAUTHORIZED = "ERR.USER.UNAUTHORIZED"
   val MSG_USER_INVALID = "ERR.USER.INVALID"
 
   implicit val jsonReads: Reads[UserContact] = (
-    (JsPath \ "user_id").read[Long] and
+    (JsPath \ "user_id").readNullable[Long] and
       (JsPath \ "token").readNullable[String] and
-      (JsPath \ "subject").read[String] and
-      (JsPath \ "message").readNullable[String] and
-      (JsPath \ "when_to_contact").readNullable[String] and
-      (JsPath \ "business_name").readNullable[String] and
-      (JsPath \ "location").readNullable[String]
+      (JsPath \ "subject").read[String](nonEmptyString) and
+      (JsPath \ "message").readNullable[String](nonEmptyString) and
+      (JsPath \ "when_to_contact").readNullable[String](nonEmptyString) and
+      (JsPath \ "business_name").readNullable[String](nonEmptyString) and
+      (JsPath \ "location").readNullable[String](nonEmptyString)
     )(UserContact.apply _)
 
   /**
@@ -55,7 +55,7 @@ object UserContact {
           Some(BasicPlaceUser(
             new BasicPlace {
               override def name: String = placeName
-              override def locality: String = location
+              override def locality: Option[String] = Some(location)
               override def lead: Boolean = true
             },
             new BasicUser {
