@@ -150,7 +150,9 @@ object User {
           )
         }
       ) flatMap {
-      user => centralAppUserList.find(_.email == user.email).map(u => user.copy(optUserId = Some(u.centralAppId.toString)))
+      user => centralAppUserList.
+        find(cappUser => cappUser.email.toLowerCase == user.email.toLowerCase || cappUser.email.toLowerCase == user.optUserId.getOrElse("").toLowerCase).
+        map(u => user.copy(optUserId = Some(u.centralAppId.toString)))
     }
   }
 }
