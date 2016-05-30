@@ -140,7 +140,16 @@ object User {
     * @return
     */
   def sanitizeUserIdFromList(userList: List[User], centralAppUserList: List[VeryBasicUser]): List[User] = {
-    userList filter(u => /*u.optUserId.isDefined && u.optUserId.get.contains("@") &&*/ centralAppUserList.exists(_.email == u.email)) flatMap {
+    userList filter(
+        u => {
+          /*u.optUserId.isDefined && u.optUserId.get.contains("@") &&*/
+          centralAppUserList.exists(
+            cappUser => {
+              cappUser.email.toLowerCase == u.email.toLowerCase || cappUser.email.toLowerCase == u.optUserId.getOrElse("").toLowerCase
+            }
+          )
+        }
+      ) flatMap {
       user => centralAppUserList.find(_.email == user.email).map(u => user.copy(optUserId = Some(u.centralAppId.toString)))
     }
   }
