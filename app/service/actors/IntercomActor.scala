@@ -90,7 +90,7 @@ class IntercomActor extends Actor {
           usersList => {
             implicit val needAnswer = true
             val sanitizedUsers = User.sanitizeUserIdFromList(usersList, users)
-            Logger.debug(sanitizedUsers.toString)
+            //Logger.debug(sanitizedUsers.toString)
             HttpClient.postDataToIntercomApi(
               "bulk/users",
               Json.toJson(
@@ -207,8 +207,19 @@ class IntercomActor extends Actor {
         _ map {
           jsonUsers => {
             val usersList = jsonUsers.flatMap(_.asOpt[User])
-            if (usersList.length != usersList.groupBy(_.email).map(_._2.head).toList.length) {
-              Logger.info(s"Some duplicated user emails were found into list: ${usersList.toString}")
+            if (usersList.length != usersList.groupBy(_.email.toLowerCase.trim).map(_._2.head).toList.length) {
+              val dupEmails = usersList.groupBy(u => u.email.toLowerCase.trim).filter {case (_, lst) => lst.length > 1}.keys
+              Logger.warn(
+                s"Some duplicated user emails were found into list: " +
+                  dupEmails.toString
+              )
+
+              Logger.warn(
+                "Duplicated users are: " +
+                usersList.filter(
+                  u => dupEmails.exists(_.toLowerCase.trim == u.email.toLowerCase.trim)
+                ).toString
+              )
             }
             Logger.debug("Caching all Intercom users for 30mn")
             cache.Cache.set("intercom_users", usersList, 30.minutes)
