@@ -97,13 +97,6 @@ object Company {
       "distributor_name" -> JsString(company.attribution.flatMap(_.distribName).getOrElse("")),
       "lead" -> company.lead
     ) ++ {
-      if (company.attribution.exists(_.creatorCentralAppId.isDefined)) {
-        Json.obj(
-          "owner_user_id" -> company.attribution.flatMap(_.creatorCentralAppId).get.toString,
-          "owner_user_email" -> JsString(company.attribution.flatMap(_.creatorEmail).getOrElse(""))
-        )
-      } else Json.obj()
-    } ++ {
       if (company.openingDates.isDefined) Json.obj("opening_date" -> DateTime.parse(company.openingDates.get).getMillis / 1000)
       else Json.obj()
     } ++ {
@@ -116,6 +109,15 @@ object Company {
         )
       } else Json.obj()
     }
+
+    /*++ {
+      if (company.attribution.exists(_.creatorCentralAppId.isDefined)) {
+        Json.obj(
+          "owner_user_id" -> company.attribution.flatMap(_.creatorCentralAppId).get.toString,
+          "owner_user_email" -> JsString(company.attribution.flatMap(_.creatorEmail).getOrElse(""))
+        )
+      } else Json.obj()
+    }*/
 
     Json.obj(
       "name" -> company.name,
