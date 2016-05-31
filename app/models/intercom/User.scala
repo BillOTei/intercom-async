@@ -145,13 +145,13 @@ object User {
           /*u.optUserId.isDefined && u.optUserId.get.contains("@") &&*/
           centralAppUserList.exists(
             cappUser => {
-              cappUser.email.toLowerCase == u.email.toLowerCase || cappUser.email.toLowerCase == u.optUserId.getOrElse("").toLowerCase
+              cappUser.email.toLowerCase.trim == u.email.toLowerCase.trim || cappUser.email.toLowerCase.trim == u.optUserId.getOrElse("").toLowerCase.trim
             }
           )
         }
       ) flatMap {
       user => centralAppUserList.
-        find(cappUser => cappUser.email.toLowerCase == user.email.toLowerCase || cappUser.email.toLowerCase == user.optUserId.getOrElse("").toLowerCase).
+        find(cappUser => cappUser.email.toLowerCase.trim == user.email.toLowerCase.trim || cappUser.email.toLowerCase.trim == user.optUserId.getOrElse("").toLowerCase.trim).
         map(u => user.copy(optUserId = Some(u.centralAppId.toString)))
     }
   }
