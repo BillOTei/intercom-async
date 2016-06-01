@@ -61,7 +61,7 @@ object User {
     */
   def isValid(user: CentralAppUser): Boolean = {
     (user.mobilePhone.isEmpty || user.mobilePhone.get.startsWith("+")) &&
-    """([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined
+      """([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined
     //&& (user.places.isEmpty || user.places.get.map(Company.isValid).forall(_ == true))
     //&& (user.companies.isEmpty || user.companies.get.map(_.attribution.creatorCentralAppId.getOrElse(0) == user.centralAppId).forall(_ == true))
   }
@@ -76,7 +76,14 @@ object User {
     * @return
     */
   def toJson(user: CentralAppUser, company: Option[Place], removeRelationship: Boolean = false) = Json.obj(
-    "name" -> (user.firstName.getOrElse("not_specified") + " " + user.lastName.getOrElse("not_specified")),
+    "name" -> {
+      (user.firstName, user.lastName) match {
+        case (Some(firstname), Some(lastname)) => user.firstName.get + " " + user.lastName.get
+        case (None, Some(lastname)) => user.lastName.get
+        case (Some(firstname), None) => user.firstName.get
+        case _ => JsNull
+      }
+    },
     "user_id" -> user.centralAppId.toString,
     "email" -> user.email,
     "custom_attributes" -> {
@@ -106,6 +113,7 @@ object User {
   /**
     * Gets a basic json to send to intercom. Used when a user contacts from
     * front end
+    *
     * @param basicPlaceUser: the data
     * @return
     */
@@ -135,20 +143,21 @@ object User {
 
   /**
     * Gets a list of users with the right user_id instead of email or nothing
+    *
     * @param userList: the list of Intercom users
     * @param centralAppUserList: the list of central app users
     * @return
     */
   def sanitizeUserIdFromList(userList: List[User], centralAppUserList: List[VeryBasicUser]): List[User] = {
     userList filter(
-        u => {
-          /*u.optUserId.isDefined && u.optUserId.get.contains("@") &&*/
-          centralAppUserList.exists(
-            cappUser => {
-              cappUser.email.toLowerCase.trim == u.email.toLowerCase.trim || cappUser.email.toLowerCase.trim == u.optUserId.getOrElse("").toLowerCase.trim
-            }
-          )
-        }
+      u => {
+        /*u.optUserId.isDefined && u.optUserId.get.contains("@") &&*/
+        centralAppUserList.exists(
+          cappUser => {
+            cappUser.email.toLowerCase.trim == u.email.toLowerCase.trim || cappUser.email.toLowerCase.trim == u.optUserId.getOrElse("").toLowerCase.trim
+          }
+        )
+      }
       ) flatMap {
       user => centralAppUserList.
         find(cappUser => cappUser.email.toLowerCase.trim == user.email.toLowerCase.trim || cappUser.email.toLowerCase.trim == user.optUserId.getOrElse("").toLowerCase.trim).
