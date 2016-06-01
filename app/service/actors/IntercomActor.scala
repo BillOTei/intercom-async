@@ -31,7 +31,7 @@ object IntercomActor {
 
   case class LeadMessage(user: BasicUser, optPlaceUser: Option[BasicPlaceUser] = None) extends IntercomMessage
 
-  case class UserMessage(user: CentralAppUser) extends IntercomMessage
+  case class UserMessage(user: CentralAppUser, update: Boolean) extends IntercomMessage
 
   case class TagMessage(tag: Tag) extends IntercomMessage
 
@@ -64,9 +64,46 @@ class IntercomActor extends Actor {
       if (Company.isValid(place)) HttpClient.postDataToIntercomApi("companies", Company.toJson(place), sender)
       else sender ! Failure(new Throwable(s"Intercom company invalid: ${place.toString}"))
 
-    case UserMessage(user: CentralAppUser) =>
-      if (User.isValid(user)) HttpClient.postDataToIntercomApi("users", User.toJson(user, None), sender)
-      else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
+    case UserMessage(user: CentralAppUser, update) =>
+      if (User.isValid(user)) {
+
+        if (update) HttpClient.postDataToIntercomApi("users", User.toJson(user, None), sender)
+        else {
+          // Need to check for lead users in order to convert them if any
+          HttpClient.getAllPagedFromIntercom("contacts", "contacts", sender, "email" -> user.email) map {
+            _ map {
+              jsonLeads => {
+                implicit val needAnswer = true
+                if (jsonLeads.length > 1) {
+                  // Just carry on user creation, we don't know which lead to convert
+                  HttpClient.postDataToIntercomApi("users", User.toJson(user, None), sender)
+                  Logger.warn(s"More than 1 lead user were found on user signup: ${jsonLeads.toString}")
+                } else {
+
+                  {
+                    for {
+                      jsonLead <- jsonLeads.headOption
+                      leadId <- (jsonLead \ "user_id").asOpt[String]
+                    } yield {
+                      HttpClient.postDataToIntercomApi(
+                        "contacts/convert",
+                        Lead.toJsonForConversion(leadId, user),
+                        sender
+                      ) recoverWith {
+                        case _ =>
+                          Logger.warn(s"Lead conversion did not succeed: $leadId")
+                          HttpClient.postDataToIntercomApi("users", User.toJson(user, None), sender)
+                      }
+                    }
+                  } getOrElse HttpClient.postDataToIntercomApi("users", User.toJson(user, None), sender)
+
+                }
+              }
+            }
+          }
+        }
+
+      } else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
 
     case DeleteAllPlaceUsersMessage(ownerEmail, placeId) =>
       // No way of doing that in one go with Intercom API,
