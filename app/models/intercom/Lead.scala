@@ -1,8 +1,9 @@
 package models.intercom
 
 import models.centralapp.BasicUser
+import models.centralapp.users.{User => CentralAppUser}
 import models.centralapp.relationships.BasicPlaceUser
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsObject, JsString, Json}
 
 object Lead {
   /**
@@ -23,4 +24,15 @@ object Lead {
     if (optCompany.isDefined) Json.obj("companies" -> Json.arr(Company.basicToJson(optCompany.get)))
     else Json.obj()
   }
+
+  /**
+    * Gets the json obj for lead to user conversion
+    * @param leadId: the lead user_id
+    * @param user: the user data to write to Intercom
+    * @return
+    */
+  def toJsonForConversion(leadId: String, user: CentralAppUser): JsObject = Json.obj(
+    "contact" -> Json.obj("user_id" -> leadId),
+    "user" -> User.toJson(user, None)
+  )
 }

@@ -87,7 +87,10 @@ class ForwardActor extends Actor {
 
         // On user creation or update
         case "user-creation" | "user-update" => (msg.payload \ "user").validate(User.userReads) match {
-          case u: JsSuccess[User] => forwardAndAskIntercom(UserMessage(u.value), msg.event)
+          case u: JsSuccess[User] => forwardAndAskIntercom(
+            UserMessage(u.value, msg.event == "user-update"),
+            msg.event
+          )
             
           case e: JsError => Logger.error(s"User invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
         }
