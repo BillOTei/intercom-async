@@ -77,7 +77,7 @@ object User {
     */
   def toJson(user: CentralAppUser, company: Option[Place], removeRelationship: Boolean = false) = Json.obj(
     "name" -> (user.firstName.getOrElse("not_specified") + " " + user.lastName.getOrElse("not_specified")),
-    "user_id" -> user.centralAppId,
+    "user_id" -> user.centralAppId.toString,
     "email" -> user.email,
     "custom_attributes" -> {
       Json.obj(
