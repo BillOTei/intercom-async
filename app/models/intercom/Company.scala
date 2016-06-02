@@ -66,7 +66,8 @@ object Company {
     * @return
     */
   def isValid(company: Place): Boolean = {
-    company.centralAppId > 0 && !company.name.isEmpty && (company.email.isEmpty || """([\w\.]+)@([\w\.]+)""".r.unapplySeq(company.email.get).isDefined)
+    company.centralAppId > 0 && !company.name.isEmpty && (company.email.isEmpty ||
+      """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r.unapplySeq(company.email.get).isDefined)
     /*&&
     company.attribution.creatorCentralAppId.isDefined &&
     (company.attribution.creatorEmail.isEmpty || """([\w\.]+)@([\w\.]+)""".r.unapplySeq(company.attribution.creatorEmail.get).isDefined)*/
