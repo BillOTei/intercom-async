@@ -2,7 +2,7 @@ package models.centralapp.places
 
 import java.util
 
-import models.centralapp.{Attribution, Plan}
+import models.centralapp.{Attribution, Language, Plan}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -64,7 +64,7 @@ object Place {
       (JsPath \ "location" \ "translated_addresses" \ lang \ "street_number").readNullable[String].
         orElse((JsPath \ "location" \ "address" \ "street_number").readNullable[String]).
         orElse((JsPath \ "location").readNullable[String]) and
-      (JsPath \ "defaultLang").readNullable[String] and
+      (JsPath \ "languages").readNullable[List[Language]] and
       (JsPath \ "established").readNullable[String] and
       (JsPath \ "primary_phone" \ "international").readNullable[String] and
       (JsPath \ "mobile" \ "international").readNullable[String] and
@@ -82,12 +82,14 @@ object Place {
       } and
       (JsPath \ "plan").readNullable[Plan]
       )(
-      (id, name, email, chainName, countryCode, locality, zip, address, streetNumber, _,
+      (id, name, email, chainName, countryCode, locality, zip, address, streetNumber, languages,
        openingDates, landlinePhone, mobilePhone, website, categories, signupDate,
        verificationStatus, completionScore, nbOfActionsToTake, billing, attribution, plan) => {
 
+        val defaultLang = languages.flatMap(_.find(_.default).map(_.code)).getOrElse(lang)
+
         // Ugly but quick fix for no place language pushed
-        Place(id, name, email, chainName, countryCode, locality, zip, address, streetNumber, Some(lang),
+        Place(id, name, email, chainName, countryCode, locality, zip, address, streetNumber, Some(defaultLang),
           openingDates, landlinePhone, mobilePhone, website, categories, signupDate,
           verificationStatus, completionScore, nbOfActionsToTake, billing, attribution, plan)
 
