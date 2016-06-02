@@ -187,12 +187,26 @@ class ForwardActor extends Actor {
     */
   def forwardAndAskIntercom[T <: IntercomMessage](message: T, eventName: String) = {
     Logger.debug(s"Forwarding $eventName to intercom...")
-    (context.actorOf(IntercomActor.props) ? message).mapTo[EventResponse].onComplete {
+    /*(context.actorOf(IntercomActor.props) ? message).mapTo[EventResponse].onComplete {
       case Success(response) => Logger.info(response.body)
       case Failure(err) => Logger.error(
         s"ForwardActor to Intercom did not succeed: ${err.getMessage} for message: ${message.toString}",
         err
       )
+    }*/
+
+    (context.actorOf(IntercomActor.props) ? message) map {
+      res => Try(res.asInstanceOf[EventResponse]) map {
+        response => Logger.info(response.body)
+      } getOrElse {
+        res match {
+          case Failure(err) => Logger.error(
+            s"ForwardActor to Intercom did not succeed: ${err.getMessage} for message: ${message.toString}",
+            err
+          )
+          case _ => Logger.error(s"ForwardActor to Intercom did not succeed for unknown reason for message: ${message.toString}")
+        }
+      }
     }
   }
 }
