@@ -61,7 +61,7 @@ object User {
     */
   def isValid(user: CentralAppUser): Boolean = {
     (user.mobilePhone.isEmpty || user.mobilePhone.get.startsWith("+")) &&
-      """([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined
+      """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r.unapplySeq(user.email).isDefined
     //&& (user.places.isEmpty || user.places.get.map(Company.isValid).forall(_ == true))
     //&& (user.companies.isEmpty || user.companies.get.map(_.attribution.creatorCentralAppId.getOrElse(0) == user.centralAppId).forall(_ == true))
   }
@@ -99,6 +99,12 @@ object User {
         "confirmed" -> user.enabled
       ) ++ {
         if (user.lastSeenDate.isDefined) Json.obj("last_seen_date_db" -> user.lastSeenDate.get / 1000)
+        else Json.obj()
+      } ++ {
+        if (user.lastName.isDefined) Json.obj("lastname" -> user.lastName.get)
+        else Json.obj()
+      } ++ {
+        if (user.firstName.isDefined) Json.obj("firstname" -> user.firstName.get)
         else Json.obj()
       }
     }
