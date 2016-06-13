@@ -100,6 +100,12 @@ object User {
       ) ++ {
         if (user.lastSeenDate.isDefined) Json.obj("last_seen_date_db" -> user.lastSeenDate.get / 1000)
         else Json.obj()
+      } ++ {
+        if (user.lastName.isDefined) Json.obj("lastname" -> user.lastName.get)
+        else Json.obj()
+      } ++ {
+        if (user.firstName.isDefined) Json.obj("firstname" -> user.firstName.get)
+        else Json.obj()
       }
     }
   ) ++ {
