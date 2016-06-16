@@ -48,4 +48,6 @@ object User {
     (JsPath \ "nbOfOwnedPlaces").readNullable[Int]
       //and (JsPath \ "places").readNullable[List[Place]]
   ) (User.apply _)
+
+  implicit val userListReads: Reads[List[User]] = (__ \ "users").lazyRead(Reads.list[User](userReads))
 }
