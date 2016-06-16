@@ -44,6 +44,8 @@ object IntercomActor {
   case class BulkUserIdUpdate(users: List[VeryBasicUser]) extends IntercomMessage
 
   case class BulkPlaceUserUpdate(placeUsers: List[PlaceUser]) extends IntercomMessage
+
+  case class BulkUserUpdate(users: List[CentralAppUser]) extends IntercomMessage
 }
 
 class IntercomActor extends Actor {
@@ -151,6 +153,21 @@ class IntercomActor extends Actor {
         Json.toJson(
           Bulk.getForFullUserUpdate(
             jsonPlaceUsers
+          )
+        ).as[JsObject],
+        sender
+      )
+
+    case BulkUserUpdate(users) =>
+      val jsonUsers = users map {
+        u => User.toJson(u, None)
+      }
+      Logger.debug(jsonUsers.toString)
+      HttpClient.postDataToIntercomApi(
+        "bulk/users",
+        Json.toJson(
+          Bulk.getForFullUserUpdate(
+            jsonUsers
           )
         ).as[JsObject],
         sender

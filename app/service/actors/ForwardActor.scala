@@ -159,6 +159,16 @@ class ForwardActor extends Actor {
             case e: JsError => Logger.error(s"User list invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
           }
 
+        case "users-update" =>
+          val page = (msg.payload \ "page").asOpt[Int].map(_.toString).getOrElse("unknown")
+          msg.payload.validate[List[User]] match {
+            case userList: JsSuccess[List[User]] =>
+              Logger.info("Processing users page " + page)
+              context.actorOf(IntercomActor.props) ! BulkUserUpdate(userList.value)
+
+            case e: JsError => Logger.error(s"For page $page: User list invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+          }
+
         // Update multiple place-users at a time
         case "placeusers-update" =>
           implicit val contextPayload = msg.payload
