@@ -34,11 +34,11 @@ object Company {
       addCustomAttribute(CustomAttribute.newStringAttribute("mobile_phone", company.mobilePhone.getOrElse(""))).
       addCustomAttribute(CustomAttribute.newStringAttribute("website", company.website.getOrElse(""))).
       addCustomAttribute(CustomAttribute.newStringAttribute(
-        "primary_cat_first_lvl",
+        "primary_cat_last_lvl",
         Category.getPrimaryOpt(company.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse("")
       )).
       addCustomAttribute(CustomAttribute.newStringAttribute(
-        "primary_cat_last_lvl",
+        "primary_cat_first_lvl",
         Category.getLastPrimaryOpt(company.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse("")
       )).
       setRemoteCreatedAt(company.signupDate.map(DateTime.parse(_).getMillis / 1000).getOrElse(0)).
@@ -90,8 +90,8 @@ object Company {
       "primary_phone" -> JsString(company.landlinePhone.getOrElse("")),
       "mobile_phone" -> JsString(company.mobilePhone.getOrElse("")),
       "website" -> JsString(company.website.getOrElse("")),
-      "primary_cat_first_lvl" -> JsString(Category.getPrimaryOpt(company.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse("")),
-      "primary_cat_last_lvl" -> JsString(Category.getLastPrimaryOpt(company.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse("")),
+      "primary_cat_last_lvl" -> JsString(Category.getPrimaryOpt(company.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse("")),
+      "primary_cat_first_lvl" -> JsString(Category.getLastPrimaryOpt(company.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse("")),
       "verification_status" -> company.verificationStatus,
       "completion_score" -> company.completionScore,
       "nb_of_actions_to_take" -> Json.toJson(company.nbOfActionsToTake.getOrElse(0)),
