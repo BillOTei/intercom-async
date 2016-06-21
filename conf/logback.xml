@@ -16,13 +16,15 @@
         </if>
         <if condition='property("SENTRY_ENVIRONMENT").contains("production")'>
             <then>
-                <dsn>https://bc958c28e53a4bda8108f53108cca74a:56d3e74af3f04085b35b4f5b4be0e42d@app.getsentry.com/77879?options</dsn>
+                <dsn>https://a7f1846cb34d451e817d8d3bef487973:2449e6d29f5f4d10b2635571a2895379@app.getsentry.com/77879?options</dsn>
             </then>
             <else>
                 <dsn>https://5feca592cbd042f98d0038edebee8c6a:3f1d301f95bc46418f0ee076aa804f7d@app.getsentry.com/77868?options</dsn>
             </else>
         </if>
-        <minLevel>INFO</minLevel>
+        <!-- only warning sent, info level is too noisy -->
+        <!--<minLevel>INFO</minLevel>-->
+
         <!--<tags>tag1:centralapp-events</tags>-->
         <!-- Optional, allows to select the ravenFactory -->
         <!--<ravenFactory>com.getsentry.raven.DefaultRavenFactory</ravenFactory>-->
