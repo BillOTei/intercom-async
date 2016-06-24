@@ -37,15 +37,20 @@ object Bulk {
         email => Item(
           "post",
           "user",
-          Json.obj(
-            "email" -> email,
-            "companies" -> Json.arr(
-              Json.obj(
-                "company_id" -> placeId.toString,
-                "remove" -> true
+          {
+            Json.obj(
+              "email" -> email,
+              "companies" -> Json.arr(
+                Json.obj(
+                  "id" -> placeId.toString,
+                  "remove" -> true
+                )
               )
-            )
-          )
+            ) ++ {
+              if ((user \ "user_id").asOpt[String].isDefined) Json.obj("user_id" -> (user \ "user_id").as[String])
+              else Json.obj()
+            }
+          }
         )
       }
     }
