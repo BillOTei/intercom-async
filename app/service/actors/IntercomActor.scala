@@ -54,6 +54,8 @@ class IntercomActor extends Actor {
   io.intercom.api.Intercom.setApiKey(current.configuration.getString("intercom.apikey").getOrElse(""))
   io.intercom.api.Intercom.setAppID(current.configuration.getString("intercom.appid").getOrElse(""))
 
+  val emailRegex = """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r
+
   def receive = {
     case PlaceUserMessage(user: CentralAppUser, place: Place, removeRelationship) => (User.isValid(user), Company.isValid(place)) match {
       case (false, false) => sender ! Failure(new Throwable(s"Intercom user & company invalid: ${user.toString} ${place.toString}"))
@@ -174,7 +176,7 @@ class IntercomActor extends Actor {
       )
 
     case EventMessage(name, createdAt, user, optPlace) =>
-      if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined) {
+      if (emailRegex.unapplySeq(user.email).isDefined) {
         HttpClient.postDataToIntercomApi(
           "events",
           Json.toJson(Event(name, createdAt, user.email, user.centralAppId, optPlace.map(_.centralAppId))).as[JsObject],
@@ -232,15 +234,15 @@ class IntercomActor extends Actor {
             )
           case Failure(e) => sender ! Answer(Failure(e))
         }
-      ) getOrElse HttpClient.postDataToIntercomApi("messages", Json.toJson(conversationInit).as[JsObject], sender)
+        ) getOrElse HttpClient.postDataToIntercomApi("messages", Json.toJson(conversationInit).as[JsObject], sender)
 
     case BasicPlaceUserMessage(placeUser) =>
-      if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(placeUser.user.email).isDefined) {
+      if (emailRegex.unapplySeq(placeUser.user.email).isDefined) {
         HttpClient.postDataToIntercomApi("users", User.basicToJson(placeUser), sender)
       } else sender ! Failure(new Throwable(s"Intercom basic user invalid: ${placeUser.user.toString}"))
 
     case LeadMessage(user, optPlaceUser) =>
-      if ("""([\w\.]+)@([\w\.]+)""".r.unapplySeq(user.email).isDefined) {
+      if (emailRegex.unapplySeq(user.email).isDefined) {
         HttpClient.postDataToIntercomApi("contacts", Lead.toJson(user, optPlaceUser), sender)
       } else sender ! Failure(new Throwable(s"Intercom basic user invalid: ${user.toString}"))
 
@@ -255,7 +257,7 @@ class IntercomActor extends Actor {
     * @return
     */
   def getAllUsers: Future[Try[List[User]]] = cache.Cache.getAs[List[User]]("intercom_users").map(l => Future.successful(Success(l))).
-      getOrElse {
+    getOrElse {
       Logger.debug("Fetching all users from Intercom API")
       HttpClient.getAllPagedFromIntercom("users", "users", sender) map {
         _ map {
@@ -270,9 +272,9 @@ class IntercomActor extends Actor {
 
               Logger.warn(
                 "Duplicated users are: " +
-                usersList.filter(
-                  u => dupEmails.exists(_.toLowerCase.trim == u.email.toLowerCase.trim)
-                ).toString
+                  usersList.filter(
+                    u => dupEmails.exists(_.toLowerCase.trim == u.email.toLowerCase.trim)
+                  ).toString
               )
             }
             Logger.debug("Caching all Intercom users for 30mn")
