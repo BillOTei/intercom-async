@@ -179,7 +179,7 @@ class IntercomActor extends Actor {
       if (emailRegex.unapplySeq(user.email).isDefined) {
         HttpClient.postDataToIntercomApi(
           "events",
-          Json.toJson(Event(name, createdAt, user.email, user.centralAppId, optPlace.map(_.centralAppId))).as[JsObject],
+          Json.toJson(Event(name, createdAt, user.email, user.centralAppId, optPlace.map(_.placePart1.centralAppId))).as[JsObject],
           sender
         )
       } else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
