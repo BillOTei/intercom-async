@@ -31,7 +31,8 @@ case class PlacePart2(website: Option[String],
                       nbOfActionsToTake: Option[Int],
                       billing: Option[PlaceBilling],
                       attribution: Option[Attribution],
-                      plan: Option[Plan])
+                      plan: Option[Plan],
+                      verificationId: Option[Long])
 
 object Place {
   val REL_CENTRALAPP_ADMIN = "CA"
@@ -98,7 +99,8 @@ object Place {
             JsSuccess(Some(Attribution(None, None, (payload \ "user" \ "id").asOpt[Long], (payload \ "user" \ "email").asOpt[String])))
           }
         } and
-        (JsPath \ "plan").readNullable[Plan]
+        (JsPath \ "plan").readNullable[Plan] and
+        (JsPath \ "verification" \ "id").readNullable[Long]
       )(PlacePart2.apply _)
   }
 

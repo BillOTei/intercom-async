@@ -91,7 +91,9 @@ object Company {
       "website" -> JsString(company.placePart2.website.getOrElse("")),
       "primary_cat_last_lvl" -> JsString(Category.getPrimaryOpt(company.placePart2.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse("")),
       "primary_cat_first_lvl" -> JsString(Category.getLastPrimaryOpt(company.placePart2.categories.get).flatMap(c => (c \ "name").asOpt[String]).getOrElse("")),
-      "verification_status" -> company.placePart2.verificationStatus,
+      "verification_status" -> {
+        if (company.placePart2.verificationStatus) "yes" else if (company.placePart2.verificationId.isDefined) "requested" else "no"
+      },
       "completion_score" -> company.placePart2.completionScore,
       "nb_of_actions_to_take" -> Json.toJson(company.placePart2.nbOfActionsToTake.getOrElse(0)),
       "distributor_name" -> JsString(company.placePart2.attribution.flatMap(_.distribName).getOrElse("")),
