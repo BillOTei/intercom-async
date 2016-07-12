@@ -19,7 +19,7 @@ object UserActions {
   object authenticatedAction extends ActionBuilder[AuthenticatedRequest] {
     override def invokeBlock[A](request: Request[A], block: (AuthenticatedRequest[A]) => Future[Result]): Future[Result] = {
       {
-        request.getQueryString("token") orElse {
+        authHeader(request) orElse request.getQueryString("token") orElse {
           Try {
             request.body.asInstanceOf[AnyContentAsJson]
           }.toOption flatMap {
@@ -40,6 +40,16 @@ object UserActions {
         }
       } getOrElse Future.successful(Results.Unauthorized(JsonError.stringError(UserContact.MSG_UNAUTHORIZED)))
     }
+
+    /**
+      * get the value in the authorization header
+      *
+      * @param r the request
+      * @tparam A the request type
+      * @return an optional string, if the header value is found
+      */
+    def authHeader[A](r: Request[A]): Option[String] =
+      r.headers.get("Authorization").filter(_.matches("^Bearer .+")).map(_.replaceAll("Bearer ", ""))
   }
 
   class AuthenticatedRequest[A](val user: User, request: Request[A]) extends WrappedRequest[A](request)
