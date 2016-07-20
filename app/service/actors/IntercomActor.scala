@@ -155,7 +155,7 @@ class IntercomActor extends Actor {
 
     case BulkPlaceUserUpdate(placeUsers) =>
       val jsonPlaceUsers = placeUsers map {
-        pu => User.toJson(pu.user, Some(pu.place))
+        pu => User.toJson(pu.user, Some(pu.place), pu.optActive.getOrElse(false))
       }
       Logger.debug(jsonPlaceUsers.toString)
       HttpClient.postDataToIntercomApi(
