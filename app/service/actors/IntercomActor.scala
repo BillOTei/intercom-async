@@ -124,6 +124,14 @@ class IntercomActor extends Actor {
           }
         }
       }
+      // Tag the place for intercom admins
+      self ! TagMessage(
+        Tag(
+          "admin-hard-deleted",
+          Nil,
+          Some(Json.arr(Json.obj("company_id" -> placeId)))
+        )
+      )
 
     case BulkUserIdUpdate(users) =>
       getAllUsers map {
@@ -147,7 +155,7 @@ class IntercomActor extends Actor {
 
     case BulkPlaceUserUpdate(placeUsers) =>
       val jsonPlaceUsers = placeUsers map {
-        pu => User.toJson(pu.user, Some(pu.place))
+        pu => User.toJson(pu.user, Some(pu.place), pu.optActive.getOrElse(false))
       }
       Logger.debug(jsonPlaceUsers.toString)
       HttpClient.postDataToIntercomApi(
