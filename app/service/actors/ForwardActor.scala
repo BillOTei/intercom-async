@@ -171,6 +171,7 @@ class ForwardActor extends Actor {
 
         // Update multiple place-users at a time
         case "placeusers-update" =>
+          Logger.debug(msg.payload.toString)
           implicit val contextPayload = msg.payload
           (msg.payload \ "placeusers").validate[List[PlaceUser]] match {
             case placeUserList: JsSuccess[List[PlaceUser]] =>
