@@ -136,6 +136,7 @@ object Company {
         Json.obj()
       }
     } ++ {
+      // Ugly but adding remove -> false bugs on Intercom...
       if (remove) Json.obj("remove" -> true)
       else Json.obj()
     }
