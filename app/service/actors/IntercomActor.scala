@@ -157,7 +157,7 @@ class IntercomActor extends Actor {
       val jsonPlaceUsers = placeUsers map {
         pu => User.toJson(pu.user, Some(pu.place), pu.optActive.exists(!_))
       }
-      Logger.debug(jsonPlaceUsers.toString)
+      //Logger.debug(jsonPlaceUsers.toString)
       HttpClient.postDataToIntercomApi(
         "bulk/users",
         Json.toJson(
