@@ -174,10 +174,15 @@ class ForwardActor extends Actor {
           implicit val contextPayload = msg.payload
 
           Logger.info("Processing placeusers page " + (msg.payload \ "page").asOpt[Int].map(_.toString).getOrElse("unknown"))
-          (msg.payload \ "placeusers").asOpt[List[PlaceUser]].foreach(_.foreach(
-            pu =>
-              Logger.debug("place: " + pu.place.placePart1.centralAppId.toString + " - user: " + pu.user.centralAppId.toString)
-          ))
+          (msg.payload \ "placeusers").asOpt[List[PlaceUser]].orElse(
+              {
+                Logger.error("placeusers parsing failed")
+                None
+              }
+            ).foreach(_.foreach(
+              pu =>
+                Logger.debug("place: " + pu.place.placePart1.centralAppId.toString + " - user: " + pu.user.centralAppId.toString)
+            ))
 
           (msg.payload \ "placeusers").validate[List[PlaceUser]] match {
             case placeUserList: JsSuccess[List[PlaceUser]] =>
