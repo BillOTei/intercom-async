@@ -17,7 +17,7 @@ case class LeadContact(
                         whenToContact: Option[String],
                         name: String,
                         email: String,
-                        phone: String,
+                        phone: Option[String],
                         language: Option[String],
                         businessName: Option[String],
                         location: Option[String]
@@ -33,7 +33,7 @@ object LeadContact extends JsonReadsConstraints {
       (JsPath \ "when_to_contact").readNullable[String] and
       (JsPath \ "name").read[String](nonEmptyString) and
       (JsPath \ "email").read[String](Reads.email) and
-      (JsPath \ "phone").read[String](nonEmptyString) and
+      (JsPath \ "phone").readNullable[String](nonEmptyString) and
       (JsPath \ "language").readNullable[String](Reads.minLength[String](2) keepAnd Reads.maxLength[String](2)) and
       (JsPath \ "business_name").readNullable[String] and
       (JsPath \ "location").readNullable[String]
@@ -44,7 +44,7 @@ object LeadContact extends JsonReadsConstraints {
     *
     * @param leadContact: The parsed user contact data
     */
-   // Todo: ConversationInit is an Intercom related object, if the need of new service providers arises, this has to be moved on Intercom related classes to keep the service providers logic on the ForwardActor side
+   // Note: ConversationInit is an Intercom related object, if the need of new service providers arises, this has to be moved on Intercom related classes to keep the service providers logic on the ForwardActor side
   def process(leadContact: LeadContact) = {
     val system = Akka.system()
 
@@ -100,7 +100,7 @@ object LeadContact extends JsonReadsConstraints {
       override def email: String = leadContact.email
       override def optName: Option[String] = Some(leadContact.name)
       override def optLang: Option[String] = leadContact.language
-      override def optPhone: Option[String] = Some(leadContact.phone)
+      override def optPhone: Option[String] = leadContact.phone
       override def optIntercomId: Option[String] = optionalIntercomId
     }
   }
