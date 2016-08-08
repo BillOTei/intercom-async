@@ -12,27 +12,27 @@ import service.actors.ForwardActor
 import service.actors.ForwardActor.Forward
 
 case class LeadContact(
-                        subject: String,
+                        subject: Option[String],
                         message: Option[String],
                         whenToContact: Option[String],
-                        name: String,
-                        email: String,
+                        name: Option[String],
+                        email: Option[String],
                         phone: Option[String],
                         language: Option[String],
                         businessName: Option[String],
                         location: Option[String]
-                      ) extends ContactRequest
+                      )
 
 object LeadContact extends JsonReadsConstraints {
 
   val MSG_LANGUAGE_INVALID = "ERR.LANGUAGE_INVALID"
 
   implicit val jsonReads: Reads[LeadContact] = (
-      (JsPath \ "subject").read[String](nonEmptyString) and
+      (JsPath \ "subject").readNullable[String](nonEmptyString) and
       (JsPath \ "message").readNullable[String](nonEmptyString) and
       (JsPath \ "when_to_contact").readNullable[String] and
-      (JsPath \ "name").read[String](nonEmptyString) and
-      (JsPath \ "email").read[String](Reads.email) and
+      (JsPath \ "name").readNullable[String](nonEmptyString) and
+      (JsPath \ "email").readNullable[String](Reads.email) and
       (JsPath \ "phone").readNullable[String](nonEmptyString) and
       (JsPath \ "language").readNullable[String](Reads.minLength[String](2) keepAnd Reads.maxLength[String](2)) and
       (JsPath \ "business_name").readNullable[String] and
@@ -55,9 +55,9 @@ object LeadContact extends JsonReadsConstraints {
           "lead-contact",
           Json.obj(),
           Some(ConversationInit(
-            leadContact.subject +
-              leadContact.whenToContact.map(" - to be contacted: " + _).getOrElse("") +
-              leadContact.message.map(" - " + _).getOrElse(""),
+            leadContact.subject.map(_ + " - ").getOrElse("") +
+              leadContact.whenToContact.map("to be contacted: " + _ + " - ").getOrElse("") +
+              leadContact.message.getOrElse(""),
             None,
             None,
             Some(leadContact)
@@ -97,8 +97,8 @@ object LeadContact extends JsonReadsConstraints {
     */
   def getBasicUser(leadContact: LeadContact, optionalIntercomId: Option[String] = None): BasicUser = {
     new BasicUser {
-      override def email: String = leadContact.email
-      override def optName: Option[String] = Some(leadContact.name)
+      override def email: String = leadContact.email.orNull
+      override def optName: Option[String] = leadContact.name
       override def optLang: Option[String] = leadContact.language
       override def optPhone: Option[String] = leadContact.phone
       override def optIntercomId: Option[String] = optionalIntercomId

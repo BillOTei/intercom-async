@@ -235,7 +235,7 @@ class IntercomActor extends Actor {
             conversationInit.optLeadContact.foreach(
               leadContact => self ! TagMessage(
                 Tag(
-                  leadContact.subject,
+                  leadContact.subject.getOrElse("leadcontact-subject-unknown"),
                   List(LeadContact.getBasicUser(leadContact, (leadJson \ "id").asOpt[String]))
                 )
               )

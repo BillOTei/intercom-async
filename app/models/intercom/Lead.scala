@@ -14,7 +14,6 @@ object Lead {
     * @return
     */
   def toJson(basicUser: BasicUser, optCompany: Option[BasicPlaceUser]) = Json.obj(
-    "email" -> basicUser.email,
     "name" -> JsString(basicUser.optName.getOrElse("")),
     "custom_attributes" -> Json.obj(
       "interface_language" -> JsString(basicUser.optLang.getOrElse("")),
@@ -22,6 +21,9 @@ object Lead {
     )
   ) ++ {
     if (optCompany.isDefined) Json.obj("companies" -> Json.arr(Company.basicToJson(optCompany.get)))
+    else Json.obj()
+  } ++ {
+    if (basicUser.email != null) Json.obj("email" -> basicUser.email)
     else Json.obj()
   }
 
