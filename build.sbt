@@ -6,6 +6,8 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.11.6"
 
+val opRabbitVersion = "1.3.0"
+
 libraryDependencies ++= Seq(
   jdbc,
   cache,
@@ -18,12 +20,14 @@ libraryDependencies ++= Seq(
   "org.codehaus.janino" % "janino" % "2.7.8",
   "com.getsentry.raven" % "raven-logback" % "7.2.2",
   "io.swagger" %% "swagger-play2" % "1.5.2",
-  "io.swagger" % "swagger-parser" % "1.0.16"
+  "io.swagger" % "swagger-parser" % "1.0.16",
+  "com.spingo" %% "op-rabbit-core" % opRabbitVersion
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 resolvers += "Akka Snapshot Repository" at "http://repo.akka.io/snapshots/"
+resolvers += "SpinGo OSS" at "http://spingo-oss.s3.amazonaws.com/repositories/releases"
 
 // Play provides two styles of routers, one expects its actions to be injected, the
 // other, legacy style, accesses its actions statically.
