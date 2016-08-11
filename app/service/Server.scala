@@ -11,9 +11,11 @@ import service.actors.ForwardActor
 import service.actors.ForwardActor.Forward
 import com.spingo.op_rabbit._
 import com.spingo.op_rabbit.RabbitControl
+import play.api.Play._
 import play.libs.Akka
 
 import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Server {
 
@@ -27,7 +29,6 @@ object Server {
     */
   def connectStream(address: String, port: Int): Unit = {
     implicit val sys = system
-    import system.dispatcher
     implicit val materializer = ActorMaterializer()
 
     val handler = Sink.foreach[Tcp.IncomingConnection] { conn =>
@@ -73,19 +74,33 @@ object Server {
     stringMsg
   }
 
-  val subscriptionRef = Subscription.run(system.actorOf(Props[RabbitControl])) {
-    import Directives._
-    // A qos of 3 will cause up to 3 concurrent messages to be processed at any given time.
-    channel(qos = 3) {
-      consume(topic(queue("such-message-queue"), List("some-topic.#"))) {
-        (body(as[Message[Nothing]]) & routingKey) { (person, key) =>
-          /* do work; this body is executed in a separate thread, as
-             provided by the implicit execution context */
+  /**
+    * RabbitMQ subscription to the events queue
+    *
+    * @return
+    */
+  def subscribe: SubscriptionRef = {
+    val queueName = current.configuration.getString("op-rabbit.centralapp.events-queue").get
 
+    Logger.debug(s"Starting to listen to queue: $queueName")
 
-          ack
+    Subscription.run(system.actorOf(Props[RabbitControl])) {
+      import Directives._
+
+      // A qos of 3 will cause up to 3 concurrent messages to be processed at any given time.
+      channel(qos = 3) {
+        consume(queue(queueName)) {
+
+          (body(as[Message[Nothing]]) & routingKey) { (msg, key) =>
+            Logger.debug(s"Event server sending to forward actor message: ${msg.event}")
+            system.actorOf(ForwardActor.props) ! Forward(msg)
+
+            ack
+          }
+
         }
       }
+
     }
   }
 
