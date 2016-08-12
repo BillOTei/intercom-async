@@ -1,7 +1,9 @@
 package service.actors
 
+import service.akkaAskTimeout
 import akka.actor.{Actor, Props}
 import akka.pattern.ask
+import akka.pattern.pipe
 import akka.util.Timeout
 import models.centralapp.BasicUser
 import models.centralapp.BasicUser.VeryBasicUser
@@ -15,6 +17,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.{JsError, JsSuccess}
 import service.actors.IntercomActor._
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
@@ -31,7 +34,7 @@ class ForwardActor extends Actor {
 
   import ForwardActor._
 
-  implicit val timeout = Timeout(10 seconds)
+  //implicit val timeout = Timeout(10 seconds)
 
   /**
     * Main forward method to the clients, so far only intercom, more to be added...
@@ -209,7 +212,25 @@ class ForwardActor extends Actor {
   def forwardAndAskIntercom[T <: IntercomMessage](message: T, eventName: String) = {
     Logger.debug(s"Forwarding $eventName to intercom...")
 
-    (context.actorOf(IntercomActor.props) ? message) map {
+    import context.dispatcher
+
+    (context.actorOf(IntercomActor.props) ? message).map {
+      res => Try(res.asInstanceOf[EventResponse]) map {
+        response =>
+          Logger.info(response.body)
+          response.body
+      } getOrElse {
+        res match {
+          case Failure(err) =>
+            Logger.error(
+              s"ForwardActor to Intercom did not succeed: ${err.getMessage} for message: ${message.toString}",
+              err
+            )
+        }
+      }
+    } pipeTo sender
+
+    /*map {
       res => Try(res.asInstanceOf[EventResponse]) map {
         response => Logger.info(response.body)
       } getOrElse {
@@ -221,6 +242,6 @@ class ForwardActor extends Actor {
           case _ => Logger.error(s"ForwardActor to Intercom did not succeed for unknown reason for message: ${message.toString}")
         }
       }
-    }
+    }*/
   }
 }
