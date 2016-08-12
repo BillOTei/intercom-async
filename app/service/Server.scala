@@ -4,6 +4,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl._
 import akka.util.ByteString
+import akka.pattern.ask
 import models.Message
 import play.Logger
 import play.api.libs.json.{JsError, JsSuccess, Json}
@@ -16,6 +17,9 @@ import play.libs.Akka
 
 import scala.util.{Failure, Success}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.language.postfixOps
+import scala.concurrent.duration._
 
 object Server {
 
@@ -93,9 +97,11 @@ object Server {
 
           (body(as[Message[Nothing]]) & routingKey) { (msg, key) =>
             Logger.debug(s"Event server sending to forward actor message: ${msg.event}")
-            system.actorOf(ForwardActor.props) ! Forward(msg)
 
-            ack
+            // 3 more attemps in 1mn in case of failure, then dropped
+            implicit val recoveryStrategy = RecoveryStrategy.limitedRedeliver(1 minute)
+
+            ack(system.actorOf(Props[ForwardActor]) ? Forward(msg))
           }
 
         }
