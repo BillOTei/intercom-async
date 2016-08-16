@@ -17,6 +17,7 @@ object Event {
         "event_name" -> o.name,
         "created_at" -> o.createdAt,
         "email" -> o.userEmail,
+        "user_id" -> o.userId.toString,
         "metadata" -> {
           Json.obj(
             "centralapp_id" -> o.userId
