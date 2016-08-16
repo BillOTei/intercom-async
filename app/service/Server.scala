@@ -1,25 +1,23 @@
 package service
 
 import akka.actor.{ActorSystem, Props}
+import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl._
 import akka.util.ByteString
-import akka.pattern.ask
+import com.spingo.op_rabbit.{RabbitControl, _}
 import models.Message
 import play.Logger
+import play.api.Play._
 import play.api.libs.json.{JsError, JsSuccess, Json}
+import play.libs.Akka
 import service.actors.ForwardActor
 import service.actors.ForwardActor.Forward
-import com.spingo.op_rabbit._
-import com.spingo.op_rabbit.RabbitControl
-import play.api.Play._
-import play.libs.Akka
 
-import scala.util.{Failure, Success}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.language.postfixOps
 import scala.concurrent.duration._
+import scala.language.postfixOps
+import scala.util.{Failure, Success}
 
 object Server {
 
