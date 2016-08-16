@@ -69,7 +69,7 @@ object Server {
     // Forward the message to the appropriate actor, ask for the response
     Json.parse(stringMsg).validate(Message.messageReads) match {
       case m: JsSuccess[Message[Nothing]] => system.actorOf(ForwardActor.props) ! Forward(m.value)
-      case e: JsError => Logger.error(s"Message invalid $stringMsg", new Throwable(e.errors.mkString(";")))
+      case e: JsError => Logger.error(s"Message invalid $stringMsg", new Exception(e.errors.mkString(";")))
     }
     // Output the strmsg for bytestring conversion to respond to the publisher
     // same message sent back means transmission went ok on the publisher side
