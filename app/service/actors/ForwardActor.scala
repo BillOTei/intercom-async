@@ -44,9 +44,9 @@ class ForwardActor extends Actor {
           case u: JsSuccess[User] => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
             case p: JsSuccess[Place] => forwardAndAskIntercom(PlaceUserMessage(u.value, p.value), msg.event)
 
-            case e: JsError => Logger.error(s"Place invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+            case e: JsError => Logger.error(s"Place invalid ${e.toString}", new Exception(e.errors.mkString(";")))
           }
-          case e: JsError => Logger.error(s"User invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+          case e: JsError => Logger.error(s"User invalid ${e.toString}", new Exception(e.errors.mkString(";")))
         }
 
         // When owner or centralAppAdmin deletes a place, that is what happens: all place user relationships deleted
@@ -63,14 +63,14 @@ class ForwardActor extends Actor {
               msg.event
             )
 
-            case e: JsError => Logger.error(s"PlaceUser invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+            case e: JsError => Logger.error(s"PlaceUser invalid ${e.toString}", new Exception(e.errors.mkString(";")))
           }
 
         // On place update
         case "place-update" => (msg.payload \ "place").validate(Place.placeReads(msg.payload)) match {
           case p: JsSuccess[Place] => forwardAndAskIntercom(PlaceMessage(p.value), msg.event)
 
-          case e: JsError => Logger.error(s"Place invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+          case e: JsError => Logger.error(s"Place invalid ${e.toString}", new Exception(e.errors.mkString(";")))
         }
 
         // When a user reaches us with place data that we don't already have in CentralApp
@@ -90,7 +90,7 @@ class ForwardActor extends Actor {
             msg.event
           )
             
-          case e: JsError => Logger.error(s"User invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+          case e: JsError => Logger.error(s"User invalid ${e.toString}", new Exception(e.errors.mkString(";")))
         }
 
         // On user login or when he asks for place verification
@@ -108,7 +108,7 @@ class ForwardActor extends Actor {
                 msg.event
               )
 
-            case e: JsError => Logger.error(s"User invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+            case e: JsError => Logger.error(s"User invalid ${e.toString}", new Exception(e.errors.mkString(";")))
           }
 
         // On user or lead contact
@@ -154,7 +154,7 @@ class ForwardActor extends Actor {
               Logger.info("Processing users page " + (msg.payload \ "page").asOpt[Int].map(_.toString).getOrElse("unknown"))
               context.actorOf(IntercomActor.props) ! BulkUserIdUpdate(userList.value)
 
-            case e: JsError => Logger.error(s"User list invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+            case e: JsError => Logger.error(s"User list invalid ${e.toString}", new Exception(e.errors.mkString(";")))
           }
 
         case "users-update" =>
@@ -164,7 +164,7 @@ class ForwardActor extends Actor {
               Logger.info("Processing users page " + page)
               context.actorOf(IntercomActor.props) ! BulkUserUpdate(userList.value)
 
-            case e: JsError => Logger.error(s"For page $page: User list invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+            case e: JsError => Logger.error(s"For page $page: User list invalid ${e.toString}", new Exception(e.errors.mkString(";")))
           }
 
         // Update multiple place-users at a time
@@ -186,7 +186,7 @@ class ForwardActor extends Actor {
             case placeUserList: JsSuccess[List[PlaceUser]] =>
               forwardAndAskIntercom(BulkPlaceUserUpdate(placeUserList.value), msg.event)
 
-            case e: JsError => Logger.error(s"PlaceUser list invalid ${e.toString}", new Throwable(e.errors.mkString(";")))
+            case e: JsError => Logger.error(s"PlaceUser list invalid ${e.toString}", new Exception(e.errors.mkString(";")))
           }
 
         case _ => Logger.warn(s"Service ${msg.event} not implemented yet")
@@ -218,7 +218,7 @@ class ForwardActor extends Actor {
         res match {
           case Failure(err) =>
             Logger.error(
-              s"ForwardActor to Intercom did not succeed: ${err.getMessage} for message: ${message.toString}",
+              s"ForwardActor to Intercom did not succeed: ${err.getMessage} for message: $message",
               err
             )
         }
