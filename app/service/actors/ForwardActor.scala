@@ -1,10 +1,7 @@
 package service.actors
 
-import service.akkaAskTimeout
 import akka.actor.{Actor, Props}
-import akka.pattern.ask
-import akka.pattern.pipe
-import akka.util.Timeout
+import akka.pattern.{ask, pipe}
 import models.centralapp.BasicUser
 import models.centralapp.BasicUser.VeryBasicUser
 import models.centralapp.places.Place
@@ -13,12 +10,10 @@ import models.centralapp.users.{User, UserReach}
 import models.intercom.{ConversationInit, IntercomMessage, Tag}
 import models.{EventResponse, Message}
 import play.Logger
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.{JsError, JsSuccess}
 import service.actors.IntercomActor._
+import service.akkaAskTimeout
 
-import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
