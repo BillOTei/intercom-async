@@ -130,8 +130,8 @@ object HttpClient {
             )
             Success(response.json)
           case 404 =>
-            optSender.foreach(_ ! EventResponse(status = true, s"Intercom resource not found"))
-            Success(JsNull)
+            optSender.foreach(_ ! Failure(new Throwable("Intercom resource not found")))
+            scala.util.Failure(new Throwable("Intercom resource not found"))
           case _ =>
             optSender.foreach(_ ! Failure(new Throwable(response.json.toString)))
             scala.util.Failure(new Throwable(response.json.toString))
