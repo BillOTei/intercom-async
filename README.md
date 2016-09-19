@@ -1,2 +1,1 @@
-# centralapp-events
-Centralapp event tracking service
+Event based broker service with rabbitmq integration.
