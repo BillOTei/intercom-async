@@ -58,15 +58,15 @@ class IntercomActor extends Actor {
 
   def receive = {
     case PlaceUserMessage(user: CentralAppUser, place: Place, removeRelationship) => (User.isValid(user), Company.isValid(place)) match {
-      case (false, false) => sender ! Failure(new Throwable(s"Intercom user & company invalid: ${user.toString} ${place.toString}"))
-      case (true, false) => sender ! Failure(new Throwable(s"Intercom company invalid: ${place.toString}"))
-      case (false, true) => sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
+      case (false, false) => sender ! Failure(new Exception(s"Intercom user & company invalid: ${user.toString} ${place.toString}"))
+      case (true, false) => sender ! Failure(new Exception(s"Intercom company invalid: ${place.toString}"))
+      case (false, true) => sender ! Failure(new Exception(s"Intercom user invalid: ${user.toString}"))
       case _ => HttpClient.postDataToIntercomApi("users", User.toJson(user, Some(place), removeRelationship), sender)
     }
 
     case PlaceMessage(place: Place) =>
       if (Company.isValid(place)) HttpClient.postDataToIntercomApi("companies", Company.toJson(place), sender)
-      else sender ! Failure(new Throwable(s"Intercom company invalid: ${place.toString}"))
+      else sender ! Failure(new Exception(s"Intercom company invalid: ${place.toString}"))
 
     case UserMessage(user: CentralAppUser, update) =>
       if (User.isValid(user)) {
@@ -107,7 +107,7 @@ class IntercomActor extends Actor {
           }
         }
 
-      } else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
+      } else sender ! Failure(new Exception(s"Intercom user invalid: ${user.toString}"))
 
     case DeleteAllPlaceUsersMessage(ownerEmail, placeId) =>
       // No way of doing that in one go with Intercom API,
@@ -190,7 +190,7 @@ class IntercomActor extends Actor {
           Json.toJson(Event(name, createdAt, user.email, user.centralAppId, optPlace.map(_.placePart1.centralAppId))).as[JsObject],
           sender
         )
-      } else sender ! Failure(new Throwable(s"Intercom user invalid: ${user.toString}"))
+      } else sender ! Failure(new Exception(s"Intercom user invalid: ${user.toString}"))
 
     case ConversationInitMessage(conversationInit) =>
       // In the case of lead contact, need to create it before
@@ -247,17 +247,17 @@ class IntercomActor extends Actor {
     case BasicPlaceUserMessage(placeUser) =>
       if (emailRegex.unapplySeq(placeUser.user.email).isDefined) {
         HttpClient.postDataToIntercomApi("users", User.basicToJson(placeUser), sender)
-      } else sender ! Failure(new Throwable(s"Intercom basic user invalid: ${placeUser.user.toString}"))
+      } else sender ! Failure(new Exception(s"Intercom basic user invalid: ${placeUser.user.toString}"))
 
     case LeadMessage(user, optPlaceUser) =>
       if (emailRegex.unapplySeq(user.email).isDefined) {
         HttpClient.postDataToIntercomApi("contacts", Lead.toJson(user, optPlaceUser), sender)
-      } else sender ! Failure(new Throwable(s"Intercom basic user invalid: ${user.toString}"))
+      } else sender ! Failure(new Exception(s"Intercom basic user invalid: ${user.toString}"))
 
     case TagMessage(tag) =>
       HttpClient.postDataToIntercomApi("tags", Json.toJson(tag).as[JsObject], sender)
 
-    case _ => sender ! Failure(new Throwable(s"Intercom message received unknown"))
+    case _ => sender ! Failure(new Exception(s"Intercom message received unknown"))
   }
 
   /**
