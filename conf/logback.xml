@@ -11,15 +11,15 @@
     <appender name="Sentry" class="com.getsentry.raven.logback.SentryAppender">
         <if condition='property("SENTRY_ENVIRONMENT").contains("development")'>
             <then>
-                <dsn>https://2d2329fae9e14fcab9dddbcef02fb9b5:e52100f91cc64bb3ac9b64d16f489818@app.getsentry.com/77650?options</dsn>
+                <dsn>yoursentrydevdsn</dsn>
             </then>
         </if>
         <if condition='property("SENTRY_ENVIRONMENT").contains("production")'>
             <then>
-                <dsn>https://a7f1846cb34d451e817d8d3bef487973:2449e6d29f5f4d10b2635571a2895379@app.getsentry.com/77879?options</dsn>
+                <dsn>yoursentryproddsn</dsn>
             </then>
             <else>
-                <dsn>https://5feca592cbd042f98d0038edebee8c6a:3f1d301f95bc46418f0ee076aa804f7d@app.getsentry.com/77868?options</dsn>
+                <dsn>yourlocalsentrydsn</dsn>
             </else>
         </if>
         <!-- only warning sent, info level is too noisy -->
