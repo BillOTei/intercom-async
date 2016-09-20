@@ -82,7 +82,7 @@ object Server {
     * @return
     */
   def subscribe: SubscriptionRef = {
-    val queueName = current.configuration.getString("op-rabbit.centralapp.events-queue").get
+    val queueName = current.configuration.getString("op-rabbit.events-queue").get
 
     Logger.debug(s"Starting to listen to queue: $queueName")
 
