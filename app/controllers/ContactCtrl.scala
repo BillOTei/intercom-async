@@ -3,11 +3,9 @@ package controllers
 import controllers.actions.UserActions.authenticatedAction
 import helpers.JsonError
 import io.swagger.annotations.{ApiResponse, _}
-import models.centralapp.Country
 import models.centralapp.contacts.{LeadContact, UserContact}
 import play.api.mvc._
 import play.libs.Akka
-import play.api.Play.current
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -51,7 +49,7 @@ class ContactCtrl extends Controller {
       request.body.asJson match {
         case Some(json) =>
           json.validate[UserContact].map {
-            case uc: UserContact =>
+            uc: UserContact =>
               //if (uc.userId == request.user.centralAppId) {
                 UserContact.process(uc, request.user.email)
                 Future(Accepted)
@@ -96,20 +94,11 @@ class ContactCtrl extends Controller {
   def leadContact = Action.async(parse.json) {
     implicit request =>
       request.body.validate[LeadContact].map {
-        case lc: LeadContact =>
-          lc.language map {
-            Country.getAtlasCountry(_) map {
-              case Some(country) =>
-                LeadContact.process(lc)
-                Accepted
-              case _ => BadRequest(JsonError.stringError(LeadContact.MSG_LANGUAGE_INVALID, "language"))
-            }
-          } getOrElse {
-            LeadContact.process(lc)
-            Future(Accepted)
-          }
+        lc =>
+          LeadContact.process(lc)
+          Future.successful(Accepted)
       }.recoverTotal {
-        e => Future(BadRequest(JsonError.jsErrors(e)))
+        e => Future.successful(BadRequest(JsonError.jsErrors(e)))
       }
   }
 }
