@@ -29,7 +29,7 @@ object UserActions {
           }
         } flatMap {
           token =>
-            HttpClient.get(current.configuration.getString("coreservice.user.url").getOrElse(""), "token" -> token).toOption map {
+            HttpClient.get(current.configuration.getString("auth-url").getOrElse(""), "token" -> token).toOption map {
               f => f flatMap {
                 resp => resp.mapToResult[User](None)(User.userReads) match {
                   case Success(user) => block(new AuthenticatedRequest[A](user, request))
