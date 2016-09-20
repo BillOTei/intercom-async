@@ -7,7 +7,7 @@ import service.Server
 object Global extends GlobalSettings {
   // No stream anymore, rabbitmq prefered
   override def onStart(app: play.api.Application): Unit = {
-    Logger.info("Centralapp Events Service starting")
+    Logger.info("Events Service starting")
 
     //Server.connectStream(ActorSystem("CentralappEvents"), "localhost", 2554)
     Server.subscribe
