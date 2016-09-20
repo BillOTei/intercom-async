@@ -1,7 +1,5 @@
 package models.billotei.places
 
-import java.util
-
 import models.billotei.{Attribution, Language, Plan}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -35,11 +33,6 @@ case class PlacePart2(website: Option[String],
                       verificationId: Option[Long])
 
 object Place {
-  val REL_CENTRALAPP_ADMIN = "CA"
-  val REL_OWNER = "O"
-  val REL_ADMIN = "A"
-  val REL_VIEWER = "V"
-  val CAN_DELETE_REL_TYPES = util.Arrays.asList(REL_CENTRALAPP_ADMIN, REL_OWNER)
 
   def placePart1Reads(payload: JsValue): Reads[PlacePart1] = {
     val lang = (payload \ "place" \ "languages").asOpt[List[JsObject]].
