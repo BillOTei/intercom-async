@@ -3,7 +3,7 @@ package controllers
 import controllers.actions.UserActions.authenticatedAction
 import helpers.JsonError
 import io.swagger.annotations.{ApiResponse, _}
-import models.centralapp.contacts.{LeadContact, UserContact}
+import models.billotei.contacts.{LeadContact, UserContact}
 import play.api.mvc._
 import play.libs.Akka
 

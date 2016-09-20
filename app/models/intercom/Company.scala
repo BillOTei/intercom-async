@@ -1,9 +1,9 @@
 package models.intercom
 
 import io.intercom.api.{CustomAttribute, Company => IntercomCompany}
-import models.centralapp.Category
-import models.centralapp.places.Place
-import models.centralapp.relationships.BasicPlaceUser
+import models.billotei.Category
+import models.billotei.places.Place
+import models.billotei.relationships.BasicPlaceUser
 import org.joda.time.DateTime
 import play.api.libs.json.{JsString, Json}
 

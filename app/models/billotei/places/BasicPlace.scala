@@ -1,4 +1,4 @@
-package models.centralapp.places
+package models.billotei.places
 
 trait BasicPlace {
   def name: String

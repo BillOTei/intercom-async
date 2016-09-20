@@ -2,12 +2,12 @@ package service.actors
 
 import akka.actor.{Actor, Props}
 import helpers.HttpClient
-import models.centralapp.BasicUser
-import models.centralapp.BasicUser.VeryBasicUser
-import models.centralapp.contacts.LeadContact
-import models.centralapp.places.{BasicPlace, Place}
-import models.centralapp.relationships.{BasicPlaceUser, PlaceUser}
-import models.centralapp.users.{User => CentralAppUser}
+import models.billotei.BasicUser
+import models.billotei.BasicUser.VeryBasicUser
+import models.billotei.contacts.LeadContact
+import models.billotei.places.{BasicPlace, Place}
+import models.billotei.relationships.{BasicPlaceUser, PlaceUser}
+import models.billotei.users.{User => CentralAppUser}
 import models.intercom._
 import models.intercom.bulk.Bulk
 import play.api.{Logger, cache}

@@ -1,8 +1,8 @@
-package models.centralapp.contacts
+package models.billotei.contacts
 
-import models.centralapp.BasicUser
-import models.centralapp.places.BasicPlace
-import models.centralapp.relationships.BasicPlaceUser
+import models.billotei.BasicUser
+import models.billotei.places.BasicPlace
+import models.billotei.relationships.BasicPlaceUser
 import models.intercom.ConversationInit
 import models.{JsonReadsConstraints, Message}
 import play.api.libs.functional.syntax._

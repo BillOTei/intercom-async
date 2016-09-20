@@ -1,8 +1,8 @@
-package models.centralapp.places
+package models.billotei.places
 
 import java.util
 
-import models.centralapp.{Attribution, Language, Plan}
+import models.billotei.{Attribution, Language, Plan}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 

@@ -1,4 +1,4 @@
-package models.centralapp.contacts
+package models.billotei.contacts
 
 abstract class ContactRequest {
   def subject: String

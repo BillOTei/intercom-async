@@ -1,6 +1,6 @@
 package models.intercom
 
-import models.centralapp.BasicUser
+import models.billotei.BasicUser
 import play.api.libs.json._
 
 case class Tag(

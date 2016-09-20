@@ -3,7 +3,7 @@ package helpers
 import akka.actor.ActorRef
 import akka.actor.Status.Failure
 import models.EventResponse
-import models.centralapp.{Country, CountryReaders}
+import models.billotei.{Country, CountryReaders}
 import play.api.Play
 import play.api.Play.current
 import play.api.libs.json._
@@ -154,7 +154,7 @@ object HttpClient {
     *
     * @return a future of the list of countries
     */
-  @deprecated
+  @deprecated("no business check for available countries", "09/16")
   def getAtlasCountries: Future[Try[List[Country]]] = {
     WS.url(Play.configuration.getString("atlasservice.static.countries.url").get).get().map {
       res => Try {

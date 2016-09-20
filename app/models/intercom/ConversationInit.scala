@@ -1,6 +1,6 @@
 package models.intercom
 
-import models.centralapp.contacts.LeadContact
+import models.billotei.contacts.LeadContact
 import play.api.libs.json._
 
 case class ConversationInit(

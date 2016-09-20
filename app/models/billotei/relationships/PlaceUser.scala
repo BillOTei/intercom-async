@@ -1,7 +1,7 @@
-package models.centralapp.relationships
+package models.billotei.relationships
 
-import models.centralapp.places.Place
-import models.centralapp.users.User
+import models.billotei.places.Place
+import models.billotei.users.User
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 

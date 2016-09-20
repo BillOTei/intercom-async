@@ -1,10 +1,10 @@
 package models.intercom
 
 import io.intercom.api.{CompanyCollection, CustomAttribute, User => IntercomUser}
-import models.centralapp.BasicUser.VeryBasicUser
-import models.centralapp.places.Place
-import models.centralapp.relationships.BasicPlaceUser
-import models.centralapp.users.{User => CentralAppUser}
+import models.billotei.BasicUser.VeryBasicUser
+import models.billotei.places.Place
+import models.billotei.relationships.BasicPlaceUser
+import models.billotei.users.{User => CentralAppUser}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 

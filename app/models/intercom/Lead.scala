@@ -1,8 +1,8 @@
 package models.intercom
 
-import models.centralapp.BasicUser
-import models.centralapp.users.{User => CentralAppUser}
-import models.centralapp.relationships.BasicPlaceUser
+import models.billotei.BasicUser
+import models.billotei.users.{User => CentralAppUser}
+import models.billotei.relationships.BasicPlaceUser
 import play.api.libs.json.{JsObject, JsString, Json}
 
 object Lead {

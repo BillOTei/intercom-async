@@ -2,11 +2,11 @@ package service.actors
 
 import akka.actor.{Actor, Props}
 import akka.pattern.{ask, pipe}
-import models.centralapp.BasicUser
-import models.centralapp.BasicUser.VeryBasicUser
-import models.centralapp.places.Place
-import models.centralapp.relationships.{BasicPlaceUser, PlaceUser}
-import models.centralapp.users.{User, UserReach}
+import models.billotei.BasicUser
+import models.billotei.BasicUser.VeryBasicUser
+import models.billotei.places.Place
+import models.billotei.relationships.{BasicPlaceUser, PlaceUser}
+import models.billotei.users.{User, UserReach}
 import models.intercom.{ConversationInit, IntercomMessage, Tag}
 import models.{EventResponse, Message}
 import play.Logger

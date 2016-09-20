@@ -1,6 +1,6 @@
-package models.centralapp.users
+package models.billotei.users
 
-import models.centralapp.{Attribution, BasicUser}
+import models.billotei.{Attribution, BasicUser}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 

@@ -2,8 +2,8 @@ package controllers.actions
 
 import helpers.WSResponseExtender.WSResponseMapper
 import helpers.{HttpClient, JsonError}
-import models.centralapp.contacts.UserContact
-import models.centralapp.users.User
+import models.billotei.contacts.UserContact
+import models.billotei.users.User
 import play.api.Play._
 import play.api.mvc._
 
