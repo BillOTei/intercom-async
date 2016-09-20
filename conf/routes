@@ -14,6 +14,6 @@ GET     /doc/event                                          controllers.ApiHelpC
 GET     /doc/contact                                        controllers.ApiHelpController.getResource(path="/contact")
 
 # Event and contact related routes
-POST    /centralapp-events/v1/event/add                     @controllers.EventCtrl.add
-POST    /api/v1/services/events/contact/user                @controllers.ContactCtrl.userContact
-POST    /api/v1/services/events/contact/lead                @controllers.ContactCtrl.leadContact
+POST    /event/add                                          @controllers.EventCtrl.add
+POST    /contact/user                                       @controllers.ContactCtrl.userContact
+POST    /contact/lead                                       @controllers.ContactCtrl.leadContact
