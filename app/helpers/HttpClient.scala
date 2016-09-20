@@ -130,22 +130,22 @@ object HttpClient {
             )
             Success(response.json)
           case 404 =>
-            optSender.foreach(_ ! EventResponse(status = true, s"Intercom resource not found"))
-            Success(JsNull)
+            optSender.foreach(_ ! Failure(new Exception("Intercom resource not found")))
+            scala.util.Failure(new Exception("Intercom resource not found"))
           case _ =>
-            optSender.foreach(_ ! Failure(new Throwable(response.json.toString)))
-            scala.util.Failure(new Throwable(response.json.toString))
+            optSender.foreach(_ ! Failure(new Exception(response.json.toString)))
+            scala.util.Failure(new Exception(response.json.toString))
         }
       ).recoverWith {
-        case e: Exception => Future.failed(new Throwable(e.getMessage))
+        case e: Exception => Future.failed(new Exception(e.getMessage))
         case t: Throwable => Future.failed(t)
-        case _ => Future.failed(new Throwable("Intercom request failed for unknown reason"))
+        case _ => Future.failed(new Exception("Intercom request failed for unknown reason"))
       }
       case scala.util.Failure(e) =>
         optSender.foreach(
           sender => if (!needAnswer) sender ! Failure(e) else sender ! Answer(scala.util.Failure(e))
         )
-        Future.failed(new Throwable(e.getMessage))
+        Future.failed(new Exception(e.getMessage))
     }
   }
 

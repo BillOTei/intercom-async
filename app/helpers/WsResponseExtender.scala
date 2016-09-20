@@ -26,10 +26,10 @@ object WSResponseExtender {
       */
     def mapToResult[B](optField: Option[String] = None)(reader: Reads[B]): Try[B] = Try {
       traverseJson(optField) match {
-        case None => throw new Throwable(play.api.i18n.Messages("error.path.missing"))
+        case None => throw new Exception(play.api.i18n.Messages("error.path.missing"))
         case Some(resJson) => resJson.validate[B](reader).asOpt match {
           case Some(validRes) => validRes
-          case _ => throw new Throwable(play.api.i18n.Messages("error.path.missing"))
+          case _ => throw new Exception(play.api.i18n.Messages("error.path.missing"))
         }
       }
     }
