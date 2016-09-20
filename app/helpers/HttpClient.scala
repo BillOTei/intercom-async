@@ -154,6 +154,7 @@ object HttpClient {
     *
     * @return a future of the list of countries
     */
+  @deprecated
   def getAtlasCountries: Future[Try[List[Country]]] = {
     WS.url(Play.configuration.getString("atlasservice.static.countries.url").get).get().map {
       res => Try {

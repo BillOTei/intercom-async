@@ -72,6 +72,7 @@ object Country {
     * @param ec implicit execution context
     * @return an optional list of countries, depending on the success
     */
+  @deprecated
   def atlasCountries()(implicit ec: ExecutionContext, app: Application): Future[Option[List[Country]]] = {
     HttpClient.getAtlasCountries map {
       case Success(countries) =>
@@ -88,6 +89,7 @@ object Country {
     * @param ec the implicit execution context
     * @return the future of an optional country.
     */
+  @deprecated
   def getAtlasCountry(code: String)(implicit ec: ExecutionContext, app: Application): Future[Option[Country]] = {
     // attempt to fetch from cache first
     getFromCacheByCode(Play.configuration.getString("atlasservice.name").get, code) match {
