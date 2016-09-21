@@ -15,8 +15,8 @@ class ContactCtrl extends Controller {
   val system = Akka.system()
 
   @ApiOperation(
-    value = "Endpoint to receive a contact request from authenticated user",
-    notes = """Only auth users with core token can use this endpoint. Logic heavily relies on Intercom conversations endpoints
+    value = "Endpoint to receive a contact request from authenticated user in you app",
+    notes = """Only auth users with token can use this endpoint. Logic heavily relies on Intercom conversations endpoints
       as it is the only service used atm. Users are upserted
       and companies are created if name and location parameters are present.
       Conversation is initiated only if message or when to contact are present. Tag is created on the user
@@ -27,9 +27,9 @@ class ContactCtrl extends Controller {
   )
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "user_id", value = "Centralapp user_id", required = true, dataType = "int", paramType = "body"),
-      new ApiImplicitParam(name = "token", value = "Centralapp user token query string or body", dataType = "string", paramType = "query"),
-      new ApiImplicitParam(name = "token", value = "Centralapp user token query string or body", dataType = "string", paramType = "body"),
+      new ApiImplicitParam(name = "user_id", value = "Your app user_id", required = true, dataType = "int", paramType = "body"),
+      new ApiImplicitParam(name = "token", value = "Your user token query string or body", dataType = "string", paramType = "query"),
+      new ApiImplicitParam(name = "token", value = "Your user token query string or body", dataType = "string", paramType = "body"),
       new ApiImplicitParam(name = "subject", value = "Message subject", required = true, dataType = "String", paramType = "body"),
       new ApiImplicitParam(name = "message", value = "Optional message body", dataType = "String", paramType = "body"),
       new ApiImplicitParam(name = "when_to_contact", value = "Optional user inputed best time to be contacted", dataType = "String", paramType = "body"),
@@ -40,7 +40,7 @@ class ContactCtrl extends Controller {
   @ApiResponses(
     Array(
       new ApiResponse(code = 202, message = ""),
-      new ApiResponse(code = 400, message = "Multiple possible formatted msgs, cf core json parsing doc."),
+      new ApiResponse(code = 400, message = "Multiple possible formatted msgs, cf json parsing doc."),
       new ApiResponse(code = 401, message = "ERR.USER.UNAUTHORIZED")
     )
   )
@@ -50,10 +50,8 @@ class ContactCtrl extends Controller {
         case Some(json) =>
           json.validate[UserContact].map {
             uc: UserContact =>
-              //if (uc.userId == request.user.centralAppId) {
                 UserContact.process(uc, request.user.email)
                 Future(Accepted)
-              //} else Future(Unauthorized(JsonError.stringError(UserContact.MSG_UNAUTHORIZED)))
             }.recoverTotal {
               e => Future(BadRequest(JsonError.jsErrors(e)))
             }
