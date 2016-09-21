@@ -10,3 +10,12 @@ is also available.
         
     POST /contact/lead 
         see /doc/contact
+
+**Event endpoints**
+    
+    POST /event/add
+        see /doc/event 
+        
+Some business specific events are already implemented such as
+user creation/update, company creation/update... See [ForwardActor.scala](https://github.com/BillOTei/intercom-async/blob/develop/app/service/actors/ForwardActor.scala)
+for jsons formats details.
