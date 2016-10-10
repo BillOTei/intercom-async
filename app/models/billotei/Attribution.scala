@@ -27,5 +27,5 @@ object Attribution {
     (JsPath \ "utmSource").readNullable[String] and
     (JsPath \ "utmContent").readNullable[String]
   )(Attribution.apply _)
-  
+
 }
